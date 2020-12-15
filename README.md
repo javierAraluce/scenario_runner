@@ -2,6 +2,14 @@
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/carla-simulator/scenario_runner.svg)
 [![Build Status](https://travis-ci.com/carla-simulator/scenario_runner.svg?branch=master)](https://travis-ci.com/carla/scenario_runner)
 
+Launch scenarios Challenge 
+========================
+python3 scenario_runner.py --route data_leaderboard/routes_devtest.xml data_leaderboard/all_towns_traffic_scenarios_public.json 0 --reloadWorld
+
+
+
+
+
 ScenarioRunner for CARLA
 ========================
 This repository contains traffic scenario definition and an execution engine
