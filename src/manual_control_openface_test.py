@@ -1,4 +1,5 @@
-#!/usr/bin/env python Araluce
+#!/usr/bin/env python 
+# Javier Araluce
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -58,12 +59,15 @@ import carla
 from examples.manual_control import (World, 
                                      CollisionSensor, LaneInvasionSensor, GnssSensor, IMUSensor)
 from openface_utils.carla_utils import CameraManager, HUD, KeyboardControl
+from srunner.autoagents.sensor_interface import SensorInterface
 
 import os
 import argparse
 import logging
 import time
 import pygame
+
+import camera_utils
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -82,6 +86,7 @@ def get_actor_display_name(actor, truncate=250):
 class WorldSR(World):
 
     restarted = False
+    sensor_interface = SensorInterface()
 
     def restart(self):
 
@@ -120,6 +125,7 @@ class WorldSR(World):
         actor_type = get_actor_display_name(self.player)
         self.hud.notification(actor_type)
 
+
     def tick(self, clock):
         if len(self.world.get_actors().filter(self.player_name)) < 1:
             return False
@@ -151,6 +157,14 @@ def game_loop(args):
         clock = pygame.time.Clock()
         while True:
             clock.tick_busy_loop(60)
+
+            #Sensors
+
+            input_data = world.sensor_interface.get_data()
+            print(input_data['Camera RGB'][1])
+
+
+
             if controller.parse_events(client, world, clock):
                 return
             if not world.tick(clock):

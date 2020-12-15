@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python 
+# Javier Araluce
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -149,27 +150,18 @@ class CameraManager(object):
         bound_y = 0.5 + self._parent.bounding_box.extent.y
         Attachment = carla.AttachmentType
         self._camera_transforms = [
-            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.2), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.2), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.2), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.2), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.2), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid)]
+            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid)]
+
         self.transform_index = 1
         self.sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB', {}],
-            ['sensor.camera.depth', cc.Raw, 'Camera Depth (Raw)', {}],
             ['sensor.camera.depth', cc.Depth, 'Camera Depth (Gray Scale)', {}],
-            ['sensor.camera.depth', cc.LogarithmicDepth, 'Camera Depth (Logarithmic Gray Scale)', {}],
-            ['sensor.camera.semantic_segmentation', cc.Raw, 'Camera Semantic Segmentation (Raw)', {}],
             ['sensor.camera.semantic_segmentation', cc.CityScapesPalette,
-                'Camera Semantic Segmentation (CityScapes Palette)', {}],
-            ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {'range': '50'}],
-            ['sensor.camera.dvs', cc.Raw, 'Dynamic Vision Sensor', {}],
-            ['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted',
-                {'lens_circle_multiplier': '3.0',
-                'lens_circle_falloff': '3.0',
-                'chromatic_aberration_intensity': '0.5',
-                'chromatic_aberration_offset': '0'}]]
+                'Camera Semantic Segmentation (CityScapes Palette)', {}]]
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
         for item in self.sensors:
@@ -183,7 +175,6 @@ class CameraManager(object):
                     bp.set_attribute(attr_name, attr_value)
             elif item[0].startswith('sensor.lidar'):
                 self.lidar_range = 50
-
                 for attr_name, attr_value in item[3].items():
                     bp.set_attribute(attr_name, attr_value)
                     if attr_name == 'range':
