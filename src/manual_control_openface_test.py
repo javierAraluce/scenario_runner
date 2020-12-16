@@ -56,9 +56,9 @@ from __future__ import print_function
 
 import carla
 
-from examples.manual_control import (World, 
-                                     CollisionSensor, LaneInvasionSensor, GnssSensor, IMUSensor)
-from openface_utils.carla_utils import CameraManager, HUD, KeyboardControl
+from examples.manual_control import (CollisionSensor, LaneInvasionSensor, GnssSensor, IMUSensor)
+
+from openface_utils.carla_utils import CameraManager, HUD, KeyboardControl, CameraManagerRGB, CameraManagerDepth, CameraManagerSemantic, World
 from srunner.autoagents.sensor_interface import SensorInterface
 
 import os
@@ -85,8 +85,45 @@ def get_actor_display_name(actor, truncate=250):
 
 class WorldSR(World):
 
+    # def __init__(self, carla_world, hud, args):
+    #     self.world = carla_world
+    #     self.actor_role_name = args.rolename
+    #     self.map = self.world.get_map()
+    #     self.hud = hud
+    #     self.player = None
+    #     self.collision_sensor = None
+    #     self.lane_invasion_sensor = None
+    #     self.gnss_sensor = None
+    #     self.camera_manager_rgb = None
+    #     self.camera_manager_depth = None
+    #     self.camera_manager_semantic = None
+    #     self.camera_manager_lidar = None
+        
+    #     self.radar_sensor = None
+    #     # self._weather_presets = find_weather_presets()
+    #     # self._weather_index = 0
+    #     self._actor_filter = args.filter
+    #     self._gamma = args.gamma
+    #     # self.point = args.point
+    #     # self.orientation = args.orientation
+    #     self.rgb_flag = 1
+    #     self.semantic_flag = 1
+    #     self.lidar_flag = 0
+    #     self.depth_flag = 1
+    #     self.previous_rendered = 0
+    #     self.sensors = ['0', 'Camera RGB', 'Camera Semantic Segmentation (CityScapes Palette)', 'Camera Depth (Raw)']
+    #     self.sensor_flags = [self.rgb_flag, self.semantic_flag, self.depth_flag]
+    #     self.args_width  = args.width
+    #     self.args_height = args.height
+
+    #     self.restart()
+
+    #     self.world.on_tick(hud.on_world_tick)
+    #     self.recording_enabled = False
+    #     self.recording_start = 0
+
     restarted = False
-    sensor_interface = SensorInterface()
+    # sensor_interface = SensorInterface()
 
     def restart(self):
 
@@ -98,8 +135,10 @@ class WorldSR(World):
         self.player_max_speed_fast = 3.713
 
         # Keep same camera config if the camera manager exists.
-        cam_index = self.camera_manager.index if self.camera_manager is not None else 0
-        cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
+        # cam_index = self.camera_manager.index if self.camera_manager is not None else 0
+        # cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
+        cam_index = self.camera_manager_rgb.index if self.camera_manager_rgb is not None else 0
+        cam_pos_index = self.camera_manager_rgb._transform_index if self.camera_manager_rgb is not None else 0
 
         # Get the ego vehicle
         while self.player is None:
@@ -119,11 +158,41 @@ class WorldSR(World):
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
         self.gnss_sensor = GnssSensor(self.player)
         self.imu_sensor = IMUSensor(self.player)
-        self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
-        self.camera_manager.transform_index = cam_pos_index
-        self.camera_manager.set_sensor(cam_index, notify=False)
+        # self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
+        # self.camera_manager.transform_index = cam_pos_index
+        # self.camera_manager.set_sensor(cam_index, notify=False)
+
+
+        if self.rgb_flag:
+            self.camera_manager_rgb = CameraManagerRGB(self.player, self.hud, self._gamma, self.args_width, self.args_height)
+            self.camera_manager_rgb._transform_index = cam_pos_index
+            self.camera_manager_rgb.set_sensor(cam_index, notify=False)
+        if self.depth_flag:
+            self.camera_manager_depth = CameraManagerDepth(self.player, self.hud, self._gamma, self.args_width, self.args_height)
+            self.camera_manager_depth._transform_index = cam_pos_index
+            self.camera_manager_depth.set_sensor(cam_index, notify=False)
+        if self.semantic_flag:
+            self.camera_manager_semantic = CameraManagerSemantic(self.player, self.hud, self._gamma, self.args_width, self.args_height)
+            self.camera_manager_semantic._transform_index = cam_pos_index
+            self.camera_manager_semantic.set_sensor(cam_index, notify=False)    
+
         actor_type = get_actor_display_name(self.player)
         self.hud.notification(actor_type)
+
+
+
+
+    def render(self, display, camera_rendered):
+        if camera_rendered == 1   and self.rgb_flag: self.camera_manager_rgb.render(display)
+        elif camera_rendered == 2 and self.semantic_flag: self.camera_manager_semantic.render(display)
+        # elif camera_rendered == 3 and self.lidar_flag: self.camera_manager_lidar.render(display)
+        elif camera_rendered == 4 and self.depth_flag: self.camera_manager_depth.render(display)
+        if camera_rendered != self.previous_rendered:
+            self.hud.notification(self.sensors[camera_rendered])
+            if self.sensor_flags[camera_rendered-1] == 0: self.hud.notification("Not rendered sensor. Relaunch agent and activate sensor through Python arguments")
+
+        self.previous_rendered = camera_rendered #detects if rendered sensor has changed
+        self.hud.render(display)
 
 
     def tick(self, clock):
@@ -157,19 +226,12 @@ def game_loop(args):
         clock = pygame.time.Clock()
         while True:
             clock.tick_busy_loop(60)
-
-            #Sensors
-
-            input_data = world.sensor_interface.get_data()
-            print(input_data['Camera RGB'][1])
-
-
-
             if controller.parse_events(client, world, clock):
                 return
             if not world.tick(clock):
                 return
-            world.render(display)
+            # world.render(display)
+            world.render(display, 4)
             pygame.display.flip()
 
     finally:
