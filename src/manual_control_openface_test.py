@@ -85,42 +85,7 @@ def get_actor_display_name(actor, truncate=250):
 
 class WorldSR(World):
 
-    # def __init__(self, carla_world, hud, args):
-    #     self.world = carla_world
-    #     self.actor_role_name = args.rolename
-    #     self.map = self.world.get_map()
-    #     self.hud = hud
-    #     self.player = None
-    #     self.collision_sensor = None
-    #     self.lane_invasion_sensor = None
-    #     self.gnss_sensor = None
-    #     self.camera_manager_rgb = None
-    #     self.camera_manager_depth = None
-    #     self.camera_manager_semantic = None
-    #     self.camera_manager_lidar = None
-        
-    #     self.radar_sensor = None
-    #     # self._weather_presets = find_weather_presets()
-    #     # self._weather_index = 0
-    #     self._actor_filter = args.filter
-    #     self._gamma = args.gamma
-    #     # self.point = args.point
-    #     # self.orientation = args.orientation
-    #     self.rgb_flag = 1
-    #     self.semantic_flag = 1
-    #     self.lidar_flag = 0
-    #     self.depth_flag = 1
-    #     self.previous_rendered = 0
-    #     self.sensors = ['0', 'Camera RGB', 'Camera Semantic Segmentation (CityScapes Palette)', 'Camera Depth (Raw)']
-    #     self.sensor_flags = [self.rgb_flag, self.semantic_flag, self.depth_flag]
-    #     self.args_width  = args.width
-    #     self.args_height = args.height
 
-    #     self.restart()
-
-    #     self.world.on_tick(hud.on_world_tick)
-    #     self.recording_enabled = False
-    #     self.recording_start = 0
 
     restarted = False
     # sensor_interface = SensorInterface()
@@ -158,7 +123,7 @@ class WorldSR(World):
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
         self.gnss_sensor = GnssSensor(self.player)
         self.imu_sensor = IMUSensor(self.player)
-        # self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
+        self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
         # self.camera_manager.transform_index = cam_pos_index
         # self.camera_manager.set_sensor(cam_index, notify=False)
 
@@ -231,7 +196,7 @@ def game_loop(args):
             if not world.tick(clock):
                 return
             # world.render(display)
-            world.render(display, 4)
+            world.render(display, controller.camera_rendered)
             pygame.display.flip()
 
     finally:

@@ -126,6 +126,11 @@ try:
     from pygame.locals import K_x
     from pygame.locals import K_MINUS
     from pygame.locals import K_EQUALS
+
+    from pygame.locals import K_4
+    from pygame.locals import K_KP0
+    from pygame.locals import K_KP4    
+
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
@@ -291,16 +296,18 @@ class CameraManagerRGB(object):
             (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid)]
         '''
         self._camera_transforms = [	#Add different camera positions
-            (carla.Transform(carla.Location(x=0,z=20), carla.Rotation(pitch=-90, yaw=-90)), Attachment.Rigid),
-            (carla.Transform(carla.Location(z=2.5)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8, z=3), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-10, z=4), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8, z=4), carla.Rotation(pitch=-25.0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8, y = -5), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8, y = -5 ,z=4), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8, y = -5 ,z=4), carla.Rotation(pitch=-25.0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8, y = -5 ,z=4), carla.Rotation(pitch=-25.0, yaw=20)), Attachment.Rigid)]
+            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid)
+            # (carla.Transform(carla.Location(x=0,z=20), carla.Rotation(pitch=-90, yaw=-90)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(z=2.5)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8, z=3), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-10, z=4), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8, z=4), carla.Rotation(pitch=-25.0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8, y = -5), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8, y = -5 ,z=4), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8, y = -5 ,z=4), carla.Rotation(pitch=-25.0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8, y = -5 ,z=4), carla.Rotation(pitch=-25.0, yaw=20)), Attachment.Rigid)
+            ]
         self.transform_index = 1
         self.sensors = [['sensor.camera.rgb', cc.Raw, 'Camera RGB']]
         world = self._parent.get_world()
@@ -385,13 +392,16 @@ class CameraManagerDepth(object):
         self.args_height = args_height
         Attachment = carla.AttachmentType
         self._camera_transforms = [	#Add different camera positions
-            (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15.0)), Attachment.Rigid)]
+             (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid)
+            # (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15.0)), Attachment.Rigid)
+            ]
         self.transform_index = 1
         self.sensors = [
-            ['sensor.camera.depth', cc.Raw, 'Camera Depth (Raw)'],
-            ['sensor.camera.depth', cc.Depth, 'Camera Depth (Gray Scale)'],
-            ['sensor.camera.depth', cc.LogarithmicDepth, 'Camera Depth (Logarithmic Gray Scale)']]
+            # ['sensor.camera.depth', cc.Raw, 'Camera Depth (Raw)'],
+            ['sensor.camera.depth', cc.Depth, 'Camera Depth (Gray Scale)']
+            # ['sensor.camera.depth', cc.LogarithmicDepth, 'Camera Depth (Logarithmic Gray Scale)']
+            ]
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
         for item in self.sensors:
@@ -472,6 +482,7 @@ class CameraManagerSemantic(object):
         self.args_height = args_height
         Attachment = carla.AttachmentType
         self._camera_transforms = [	#Add different camera positions
+            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
             (carla.Transform(carla.Location(z=2.5)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15.0)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid)]
@@ -546,9 +557,9 @@ class CameraManagerSemantic(object):
 
 
 
-# ==============================================================================
-# -- CameraManager -------------------------------------------------------------
-# ==============================================================================
+# # ==============================================================================
+# # -- CameraManager -------------------------------------------------------------
+# # ==============================================================================
 
 
 class CameraManager(object):
@@ -669,6 +680,7 @@ class CameraManager(object):
             image.save_to_disk('_out/%08d' % image.frame)
 
 
+
 # ==============================================================================
 # -- Timer ---------------------------------------------------------------------
 # ==============================================================================
@@ -686,6 +698,8 @@ class RepeatTimer(Timer):
 class KeyboardControl(object):
     """Class that handles keyboard input."""
     def __init__(self, world, start_in_autopilot):
+
+        self.camera_rendered = 1
 
         self._autopilot_enabled = start_in_autopilot
         if isinstance(world.player, carla.Vehicle):
@@ -731,7 +745,10 @@ class KeyboardControl(object):
                 elif event.key == K_h or (event.key == K_SLASH and pygame.key.get_mods() & KMOD_SHIFT):
                     world.hud.help.toggle()
                 elif event.key == K_TAB:
-                    world.camera_manager.toggle_camera()
+                    if self.camera_rendered == 1:   world.camera_manager_rgb.toggle_camera()
+                    elif self.camera_rendered == 2: world.camera_manager_semantic.toggle_camera()
+                    elif self.camera_rendered == 4: world.camera_manager_depth.toggle_camera()
+                    # world.camera_manager.toggle_camera()
                 elif event.key == K_c and pygame.key.get_mods() & KMOD_SHIFT:
                     world.next_weather(reverse=True)
                 elif event.key == K_c:
@@ -741,7 +758,16 @@ class KeyboardControl(object):
                 elif event.key == K_BACKQUOTE:
                     world.camera_manager.next_sensor()
                 elif event.key == K_n:
-                    world.camera_manager.next_sensor()
+                    if self.camera_rendered == 1:   world.camera_manager_rgb.next_sensor()
+                    elif self.camera_rendered == 2: world.camera_manager_semantic.next_sensor()
+                    elif self.camera_rendered == 3: world.camera_manager_lidar.next_sensor()
+                    elif self.camera_rendered == 4: world.camera_manager_depth.next_sensor()
+                elif (event.key > K_0 and event.key <= K_4) or (event.key > K_KP0 and event.key <= K_KP4):
+                    #world.camera_manager_rgb.set_sensor(event.key - 1 - K_0)
+                    if event.key < 60: self.camera_rendered = event.key-48 
+                    else: self.camera_rendered = event.key-256 
+
+                    # world.camera_manager.next_sensor()
                 elif event.key == K_w and (pygame.key.get_mods() & KMOD_CTRL):
                     if world.constant_velocity_enabled:
                         world.player.disable_constant_velocity()
