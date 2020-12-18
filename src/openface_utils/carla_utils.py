@@ -296,17 +296,22 @@ class CameraManagerRGB(object):
             (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid)]
         '''
         self._camera_transforms = [	#Add different camera positions
-            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=0,z=20), carla.Rotation(pitch=-90, yaw=-90)), Attachment.Rigid),
-            (carla.Transform(carla.Location(z=2.5)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8, z=3), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-10, z=4), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8, z=4), carla.Rotation(pitch=-25.0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8, y = -5), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8, y = -5 ,z=4), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8, y = -5 ,z=4), carla.Rotation(pitch=-25.0, yaw=0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-8, y = -5 ,z=4), carla.Rotation(pitch=-25.0, yaw=20)), Attachment.Rigid)
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid)
+            
+            # (carla.Transform(carla.Location(x=0,z=20), carla.Rotation(pitch=-90, yaw=-90)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(z=2.5)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8, z=3), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-10, z=4), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8, z=4), carla.Rotation(pitch=-25.0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8, y = -5), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8, y = -5 ,z=4), carla.Rotation(pitch=0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8, y = -5 ,z=4), carla.Rotation(pitch=-25.0, yaw=0)), Attachment.Rigid),
+            # (carla.Transform(carla.Location(x=-8, y = -5 ,z=4), carla.Rotation(pitch=-25.0, yaw=20)), Attachment.Rigid)
             ]
         self.transform_index = 1
         self.sensors = [['sensor.camera.rgb', cc.Raw, 'Camera RGB']]
@@ -318,7 +323,7 @@ class CameraManagerRGB(object):
             #bp.set_attribute('image_size_y', str(hud.dim[1])), 
             bp.set_attribute('image_size_x', str(self.args_width))
             bp.set_attribute('image_size_y', str(self.args_height))
-            bp.set_attribute('fov', '100')
+            bp.set_attribute('fov', '100') #100
             bp.set_attribute('sensor_tick', '0')
             if bp.has_attribute('gamma'):
                     bp.set_attribute('gamma', str(gamma_correction))
@@ -392,7 +397,7 @@ class CameraManagerDepth(object):
         self.args_height = args_height
         Attachment = carla.AttachmentType
         self._camera_transforms = [	#Add different camera positions
-             (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
+             (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid)
             # (carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15.0)), Attachment.Rigid)
             ]
@@ -482,7 +487,7 @@ class CameraManagerSemantic(object):
         self.args_height = args_height
         Attachment = carla.AttachmentType
         self._camera_transforms = [	#Add different camera positions
-            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
             (carla.Transform(carla.Location(z=2.5)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15.0)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid)]
@@ -570,10 +575,9 @@ class CameraManager(object):
         bound_y = 0.5 + self._parent.bounding_box.extent.y
         Attachment = carla.AttachmentType
         self._camera_transforms = [
-            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid)]
 
         self.transform_index = 1
