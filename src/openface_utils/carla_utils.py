@@ -323,7 +323,7 @@ class CameraManagerRGB(object):
             #bp.set_attribute('image_size_y', str(hud.dim[1])), 
             bp.set_attribute('image_size_x', str(self.args_width))
             bp.set_attribute('image_size_y', str(self.args_height))
-            bp.set_attribute('fov', '100') #100
+            bp.set_attribute('fov', '120') #100
             bp.set_attribute('sensor_tick', '0')
             if bp.has_attribute('gamma'):
                     bp.set_attribute('gamma', str(gamma_correction))
