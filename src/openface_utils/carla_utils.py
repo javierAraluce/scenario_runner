@@ -682,7 +682,6 @@ class CameraManager(object):
             image.save_to_disk('_out/%08d' % image.frame)
 
 
-
 # ==============================================================================
 # -- Timer ---------------------------------------------------------------------
 # ==============================================================================
@@ -949,9 +948,9 @@ class HUD(object):
         mono = default_font if default_font in fonts else fonts[0]
         mono = pygame.font.match_font(mono)
         self._font_mono = pygame.font.Font(mono, 12 if os.name == 'nt' else 14)
-        # var = height / 3
-        # self._notifications = FadingText(font, (width, 40), (var , var - 40))
+        var = height / 3
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
+        self._notifications_permanent = FadingText(font, (width, 40), (width - 200 , 0))
         self.help = HelpText(pygame.font.Font(mono, 16), width, height)
         self.server_fps = 0
         self.frame = 0
@@ -959,6 +958,8 @@ class HUD(object):
         self._show_info = True
         self._info_text = []
         self._server_clock = pygame.time.Clock()
+
+        self.autopilot_enabled = False
 
     def on_world_tick(self, timestamp):
         self._server_clock.tick()
@@ -968,6 +969,7 @@ class HUD(object):
 
     def tick(self, world, clock):
         self._notifications.tick(world, clock)
+        self._notifications_permanent.tick(world, clock)
         if not self._show_info:
             return
         t = world.player.get_transform()
@@ -1027,6 +1029,8 @@ class HUD(object):
                     break
                 vehicle_type = get_actor_display_name(vehicle, truncate=22)
                 self._info_text.append('% 4dm %s' % (d, vehicle_type))
+                 
+        self.drive_mode_display()        
 
     def toggle_info(self):
         self._show_info = not self._show_info
@@ -1073,8 +1077,18 @@ class HUD(object):
                     display.blit(surface, (8, v_offset))
                 v_offset += 18
         self._notifications.render(display)
+        self._notifications_permanent.render(display)
         self.help.render(display)
 
+    def drive_mode_display(self):
+        if (self.autopilot_enabled):
+            text = 'Autonomous mode'
+        else:
+            text = 'Manual mode'
+        # print(text)
+        self._notifications_permanent.set_text(text, seconds=1)
+
+    
 # ==============================================================================
 # -- FadingText ----------------------------------------------------------------
 # ==============================================================================
@@ -1094,6 +1108,7 @@ class FadingText(object):
         self.seconds_left = seconds
         self.surface.fill((0, 0, 0, 0))
         self.surface.blit(text_texture, (10, 11))
+ 
 
     def tick(self, _, clock):
         delta_seconds = 1e-3 * clock.get_time()

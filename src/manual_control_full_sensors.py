@@ -184,12 +184,13 @@ def game_loop(args):
             (args.width, args.height),
             pygame.HWSURFACE | pygame.DOUBLEBUF)  #| pygame.FULLSCREEN)
 
-        hud = HUD(args.width, args.height)
+        hud = HUD(args.width, args.height) #, controller._autopilot_enabled)
         world = WorldSR(client.get_world(), hud, args)
         controller = KeyboardControl(world, args.autopilot)
 
         clock = pygame.time.Clock()
         while True:
+            hud.autopilot_enabled =  controller._autopilot_enabled
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):
                 return
