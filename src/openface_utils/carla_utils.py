@@ -948,7 +948,6 @@ class HUD(object):
         mono = default_font if default_font in fonts else fonts[0]
         mono = pygame.font.match_font(mono)
         self._font_mono = pygame.font.Font(mono, 12 if os.name == 'nt' else 14)
-        var = height / 3
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
         self._notifications_permanent = FadingText(font, (width, 40), (width - 200 , 0))
         self.help = HelpText(pygame.font.Font(mono, 16), width, height)
