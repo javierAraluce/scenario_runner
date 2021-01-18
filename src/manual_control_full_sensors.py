@@ -168,6 +168,27 @@ class WorldSR(World):
         return True
 
 # ==============================================================================
+# -- change_mode() ---------------------------------------------------------------
+# ==============================================================================
+
+def autonomous_to_manual_mode(localization):
+    print('X: ', localization.x)
+    if (localization.x == and localization.y == ):
+        change = True
+    elif (localization.x == and localization.y == ):
+        change = True
+    else:
+        change = False
+
+
+
+    if (change == true):
+        newevent = pygame.event.Event(pygame.locals.KEYDOWN, unicode="p", key=pygame.locals.K_p, mod=pygame.locals.KMOD_NONE) #create the event
+        pygame.event.post(newevent) #add the event to the queue
+
+
+
+# ==============================================================================
 # -- game_loop() ---------------------------------------------------------------
 # ==============================================================================
 
@@ -190,7 +211,9 @@ def game_loop(args):
 
         clock = pygame.time.Clock()
         while True:
-            hud.autopilot_enabled =  controller._autopilot_enabled
+            hud.autopilot_enabled = controller._autopilot_enabled
+            autonomous_to_manual_mode(world.player.get_transform().location)
+
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):
                 return
