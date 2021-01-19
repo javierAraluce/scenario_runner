@@ -722,6 +722,7 @@ class KeyboardControl(object):
 
 
     def change_autonomous_mode(self, world):
+        # self._control.throttle = 0.0
         self.flag_timer = False
         world.player.set_autopilot(self._autopilot_enabled)
         self.timer_mode.cancel()
