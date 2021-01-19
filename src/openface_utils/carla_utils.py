@@ -718,9 +718,11 @@ class KeyboardControl(object):
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
         self.timer_mode = RepeatTimer(3.0, lambda:self.change_autonomous_mode(world))
+        self.flag_timer = False
 
 
     def change_autonomous_mode(self, world):
+        self.flag_timer = False
         world.player.set_autopilot(self._autopilot_enabled)
         self.timer_mode.cancel()
         self.timer_mode = RepeatTimer(3.0, lambda:self.change_autonomous_mode(world))

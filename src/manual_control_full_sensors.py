@@ -172,19 +172,18 @@ class WorldSR(World):
 # ==============================================================================
 
 def autonomous_to_manual_mode(localization):
-    print('X: ', localization.x)
-    if (localization.x == and localization.y == ):
-        change = True
-    elif (localization.x == and localization.y == ):
+    print('X: ', round(localization.x), 'Y: ', round(localization.y))
+    if ((round(localization.x) == 305) and (193 < round(localization.y) < 197)):
         change = True
     else:
         change = False
 
 
-
-    if (change == true):
-        newevent = pygame.event.Event(pygame.locals.KEYDOWN, unicode="p", key=pygame.locals.K_p, mod=pygame.locals.KMOD_NONE) #create the event
-        pygame.event.post(newevent) #add the event to the queue
+    print('Change: ', change)
+    return change
+    
+        # newevent = pygame.event.Event(pygame.locals.KEYDOWN, unicode="p", key=pygame.locals.K_p, mod=pygame.locals.KMOD_NONE) #create the event
+        # pygame.event.post(newevent) #add the event to the queue
 
 
 
@@ -212,7 +211,12 @@ def game_loop(args):
         clock = pygame.time.Clock()
         while True:
             hud.autopilot_enabled = controller._autopilot_enabled
-            autonomous_to_manual_mode(world.player.get_transform().location)
+            change = autonomous_to_manual_mode(world.player.get_transform().location)
+            if (change == True and controller.flag_timer == False):
+                controller.flag_timer = True
+                controller._autopilot_enabled = not controller._autopilot_enabled
+                #Add delay of 3 second to notificate the user
+                controller.timer_mode.start()
 
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):
