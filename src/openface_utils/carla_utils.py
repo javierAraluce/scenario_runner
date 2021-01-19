@@ -89,6 +89,14 @@ import weakref
 from threading import Timer
 import time
 
+if sys.version_info >= (3, 0):
+
+    from configparser import ConfigParser
+
+else:
+
+    from ConfigParser import RawConfigParser as ConfigParser
+
 try:
     import pygame
     from pygame.locals import KMOD_CTRL
@@ -721,6 +729,38 @@ class KeyboardControl(object):
         self.flag_timer = False
 
 
+        # initialize steering wheel
+        pygame.joystick.init()
+
+        joystick_count = pygame.joystick.get_count()
+        if joystick_count > 1:
+            raise ValueError("Please Connect Just One Joystick")
+
+        self._joystick = pygame.joystick.Joystick(0)
+        self._joystick.init()
+
+        # self._parser = ConfigParser()
+        # self._parser.read('wheel_config.ini')
+        # self._steer_idx = int(
+        #     self._parser.get('G29 Racing Wheel', 'steering_wheel'))
+        # self._throttle_idx = int(
+        #     self._parser.get('G29 Racing Wheel', 'throttle'))
+        # self._brake_idx = int(self._parser.get('G29 Racing Wheel', 'brake'))
+        # self._reverse_idx = int(self._parser.get('G29 Racing Wheel', 'reverse'))
+        # self._handbrake_idx = int(
+        #     self._parser.get('G29 Racing Wheel', 'handbrake'))
+
+        self._steer_idx = int(0)
+           
+        self._throttle_idx = int(1)
+      
+        self._brake_idx = int(2)
+        self._reverse_idx = int(3)
+        self._handbrake_idx = int(4)
+
+
+
+
     def change_autonomous_mode(self, world):
         # self._control.throttle = 0.0
         self.flag_timer = False
@@ -870,6 +910,7 @@ class KeyboardControl(object):
         if not self._autopilot_enabled:
             if isinstance(self._control, carla.VehicleControl):
                 self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
+                self._parse_vehicle_wheel()
                 self._control.reverse = self._control.gear < 0
                 # Set automatic control-related vehicle lights
                 if self._control.brake:
@@ -914,6 +955,42 @@ class KeyboardControl(object):
         self._steer_cache = min(0.7, max(-0.7, self._steer_cache))
         self._control.steer = round(self._steer_cache, 1)
         self._control.hand_brake = keys[K_SPACE]
+
+    def _parse_vehicle_wheel(self):
+        numAxes = self._joystick.get_numaxes()
+        jsInputs = [float(self._joystick.get_axis(i)) for i in range(numAxes)]
+        # print (jsInputs)
+        jsButtons = [float(self._joystick.get_button(i)) for i in
+                     range(self._joystick.get_numbuttons())]
+
+        # Custom function to map range of inputs [1, -1] to outputs [0, 1] i.e 1 from inputs means nothing is pressed
+        # For the steering, it seems fine as it is
+        K1 = 1.0  # 0.55
+        steerCmd = K1 * math.tan(1.1 * jsInputs[self._steer_idx])
+
+        K2 = 1.6  # 1.6
+        throttleCmd = K2 + (2.05 * math.log10(
+            -0.7 * jsInputs[self._throttle_idx] + 1.4) - 1.2) / 0.92
+        if throttleCmd <= 0:
+            throttleCmd = 0
+        elif throttleCmd > 1:
+            throttleCmd = 1
+
+        brakeCmd = 1.6 + (2.05 * math.log10(
+            -0.7 * jsInputs[self._brake_idx] + 1.4) - 1.2) / 0.92
+        if brakeCmd <= 0:
+            brakeCmd = 0
+        elif brakeCmd > 1:
+            brakeCmd = 1
+
+        self._control.steer = steerCmd
+        self._control.brake = brakeCmd
+        self._control.throttle = throttleCmd
+
+        #toggle = jsButtons[self._reverse_idx]
+
+        self._control.hand_brake = bool(jsButtons[self._handbrake_idx])
+
 
     def _parse_walker_keys(self, keys, milliseconds, world):
         self._control.speed = 0.0
