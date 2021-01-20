@@ -305,10 +305,10 @@ class CameraManagerRGB(object):
         '''
         self._camera_transforms = [	#Add different camera positions
             (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid)
+            (carla.Transform(carla.Location(x = 0.4, y = -0.3 ,z = 1.4), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.5, y = -0.3 ,z = 1.4), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.6, y = -0.3 ,z = 1.4), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.7, y = -0.3 ,z = 1.4), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid)
             
             # (carla.Transform(carla.Location(x=0,z=20), carla.Rotation(pitch=-90, yaw=-90)), Attachment.Rigid),
             # (carla.Transform(carla.Location(z=2.5)), Attachment.Rigid),

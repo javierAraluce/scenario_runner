@@ -183,7 +183,14 @@ def autonomous_to_manual_mode(localization, map):
         else:
             change = False
     elif (map.name == 'Town03'):
-        print('mapa 3')
+        # if ((round(localization.x) == 305) and (193 < round(localization.y) < 197)):
+        #     change = True
+        # elif ((round(localization.x) == 142) and (193 < round(localization.y) < 197)):
+        #     change = True
+        # elif ((round(localization.x) == 42) and (325 < round(localization.y) < 328)):
+        #     change = True
+        # else:
+        #     change = False
         change = False
     else:
         print('mal')
@@ -285,7 +292,7 @@ def main():
     argparser.add_argument(
         '--res',
         metavar='WIDTHxHEIGHT',
-        default='1280x720',
+        default='5760x1080',
         help='window resolution (default: 1280x720)') 
     args = argparser.parse_args()
 
