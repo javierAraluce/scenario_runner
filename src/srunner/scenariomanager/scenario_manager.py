@@ -157,8 +157,8 @@ class ScenarioManager(object):
 
             self._watchdog.update()
 
-            if self._debug_mode:
-                print("\n--------- Tick ---------\n")
+            # if self._debug_mode:
+                # print("\n--------- Tick ---------\n")
 
             # Update game time and actor information
             GameTime.on_carla_tick(timestamp)
@@ -173,10 +173,10 @@ class ScenarioManager(object):
             # Tick scenario
             self.scenario_tree.tick_once()
 
-            if self._debug_mode:
-                print("\n")
-                py_trees.display.print_ascii_tree(self.scenario_tree, show_status=True)
-                sys.stdout.flush()
+            # if self._debug_mode:
+                # print("\n")
+                # py_trees.display.print_ascii_tree(self.scenario_tree, show_status=True)
+                # sys.stdout.flush()
 
             if self.scenario_tree.status != py_trees.common.Status.RUNNING:
                 self._running = False

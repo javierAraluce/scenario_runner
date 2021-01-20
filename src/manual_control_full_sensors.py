@@ -171,16 +171,23 @@ class WorldSR(World):
 # -- change_mode() ---------------------------------------------------------------
 # ==============================================================================
 
-def autonomous_to_manual_mode(localization):
+def autonomous_to_manual_mode(localization, map):
     # print('X: ', round(localization.x), 'Y: ', round(localization.y))
-    if ((round(localization.x) == 305) and (193 < round(localization.y) < 197)):
-        change = True
-    elif ((round(localization.x) == 142) and (193 < round(localization.y) < 197)):
-        change = True
-    elif ((round(localization.x) == 42) and (325 < round(localization.y) < 328)):
-        change = True
-    else:
+    if (map.name == 'Town01'):
+        if ((round(localization.x) == 305) and (193 < round(localization.y) < 197)):
+            change = True
+        elif ((round(localization.x) == 142) and (193 < round(localization.y) < 197)):
+            change = True
+        elif ((round(localization.x) == 42) and (325 < round(localization.y) < 328)):
+            change = True
+        else:
+            change = False
+    elif (map.name == 'Town03'):
+        print('mapa 3')
         change = False
+    else:
+        print('mal')
+        change = False        
     return change
     
         # newevent = pygame.event.Event(pygame.locals.KEYDOWN, unicode="p", key=pygame.locals.K_p, mod=pygame.locals.KMOD_NONE) #create the event
@@ -208,11 +215,14 @@ def game_loop(args):
         hud = HUD(args.width, args.height) #, controller._autopilot_enabled)
         world = WorldSR(client.get_world(), hud, args)
         controller = KeyboardControl(world, args.autopilot)
+        map = world.map
+        print(map)
 
         clock = pygame.time.Clock()
         while True:
             hud.autopilot_enabled = controller._autopilot_enabled
-            change_mode = autonomous_to_manual_mode(world.player.get_transform().location)
+            change_mode = autonomous_to_manual_mode(world.player.get_transform().location, map)
+
             if (change_mode == True and controller.flag_timer == False):
                 controller.flag_timer = True
                 world.player.apply_control(carla.VehicleControl(throttle = 0.0))
@@ -223,7 +233,7 @@ def game_loop(args):
                 #Add delay of 3 second to notificate the user
                 controller.timer_mode.start()
 
-            print("Ac: ", world.player.get_control().throttle)
+            # print("Ac: ", world.player.get_control().throttle)
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):
                 return
