@@ -292,8 +292,8 @@ def main():
     argparser.add_argument(
         '--res',
         metavar='WIDTHxHEIGHT',
-        default='5760x1080',
-        help='window resolution (default: 1280x720)') 
+        default='1280x720',
+        help='window resolution (default: 1280x720)5760x1080') 
     args = argparser.parse_args()
 
     args.rolename = 'hero'      # Needed for CARLA version
