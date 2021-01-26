@@ -177,7 +177,9 @@ class World(object):
         self.lidar_flag = 0 #args.LIDAR
         self.depth_flag = 1 #args.depth
         self.previous_rendered = 0
-        self.sensors = ['0', 'Camera RGB', 'Camera Semantic Segmentation (CityScapes Palette)', 'Lidar (Ray-Cast)', 'Camera Depth (Raw)']
+        # self.sensors = ['0', 'Camera RGB', 'Camera Semantic Segmentation (CityScapes Palette)', 'Lidar (Ray-Cast)', 'Camera Depth (Raw)']
+        self.sensors = ['0', 'Camera RGB', 'Camera Semantic Segmentation (Raw)', 'Lidar (Ray-Cast)', 'Camera Depth (Raw)']
+        
         self.sensor_flags = [self.rgb_flag, self.semantic_flag, self.lidar_flag, self.depth_flag]
         self.args_width  = args.width
         self.args_height = args.height
@@ -500,9 +502,12 @@ class CameraManagerSemantic(object):
             (carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15.0)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid)]
         self.transform_index = 1
+        # self.sensors = [
+        #     ['sensor.camera.semantic_segmentation', cc.CityScapesPalette, 'Camera Semantic Segmentation (CityScapes Palette)'],
+        #     ['sensor.camera.semantic_segmentation', cc.Raw, 'Camera Semantic Segmentation (Raw)']]
         self.sensors = [
-            ['sensor.camera.semantic_segmentation', cc.CityScapesPalette, 'Camera Semantic Segmentation (CityScapes Palette)'],
             ['sensor.camera.semantic_segmentation', cc.Raw, 'Camera Semantic Segmentation (Raw)']]
+
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
         for item in self.sensors:
