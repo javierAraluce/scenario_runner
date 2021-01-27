@@ -7,8 +7,16 @@ Launch scenarios Challenge
 ```
 python3 scenario_runner.py --route data_leaderboard/routes_devtest.xml data_leaderboard/all_towns_traffic_scenarios_public.json 0 --reloadWorld
 ```
-
-
+```
+### CARLA configuration
+export UE4_ROOT=~/Carla/UnrealEngine_4.24
+export CARLA_ROOT=~/Carla/carla
+export SCENARIO_RUNNER_ROOT=~/Carla/scenario_runner
+export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla/dist/carla-0.9.10-py3.6-linux-x86_64.egg
+export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla/agents
+export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla
+export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI
+```
 
 
 ScenarioRunner for CARLA
