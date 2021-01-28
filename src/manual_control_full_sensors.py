@@ -58,7 +58,7 @@ import carla
 
 from examples.manual_control import (CollisionSensor, LaneInvasionSensor, GnssSensor, IMUSensor)
 
-from openface_utils.carla_utils import CameraManager, HUD, KeyboardControl, CameraManagerRGB, CameraManagerDepth, CameraManagerSemantic, World
+from openface_utils.carla_utils import CameraManager, HUD, KeyboardControl, CameraManagerRGB, CameraManagerDepth, CameraManagerSemantic, World, RepeatTimer
 from srunner.autoagents.sensor_interface import SensorInterface
 
 import os
@@ -230,17 +230,22 @@ def game_loop(args):
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode = autonomous_to_manual_mode(world.player.get_transform().location, map)
 
-            if (change_mode == True and controller.flag_timer == False):
+            if (change_mode and controller.flag_timer == False):
                 controller.flag_timer = True
-                world.player.apply_control(carla.VehicleControl(throttle = 0.0))
-                controller._control.throttle = 0.0
-                world.player.get_control().throttle = 0.0
-                
-                controller._autopilot_enabled = not controller._autopilot_enabled
-                #Add delay of 3 second to notificate the user
-                controller.timer_mode.start()
+                # world.hud.notification('Autopilot cambiando en 3 segundos %s' % ('On' if controller._autopilot_enabled else 'Off', 3)
 
-            # print("Ac: ", world.player.get_control().throttle)
+                controller.begin_timer(world)
+                # controller.timer_mode = RepeatTimer(3.0, lambda:controller.change_autonomous_mode(world))
+               
+                
+                # world.player.apply_control(carla.VehicleControl(throttle = 0.0))
+                # controller._control.throttle = 0.0
+                # world.player.get_control().throttle = 0.0
+                
+                # controller._autopilot_enabled = not controller._autopilot_enabled
+                # Add delay of 3 second to notificate the user
+                # print("Ac: ", world.player.get_control().throttle)
+            
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):
                 return

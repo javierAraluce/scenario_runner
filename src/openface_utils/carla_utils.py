@@ -744,17 +744,6 @@ class KeyboardControl(object):
         # self._joystick = pygame.joystick.Joystick(0)
         # self._joystick.init()
 
-        # # self._parser = ConfigParser()
-        # # self._parser.read('wheel_config.ini')
-        # # self._steer_idx = int(
-        # #     self._parser.get('G29 Racing Wheel', 'steering_wheel'))
-        # # self._throttle_idx = int(
-        # #     self._parser.get('G29 Racing Wheel', 'throttle'))
-        # # self._brake_idx = int(self._parser.get('G29 Racing Wheel', 'brake'))
-        # # self._reverse_idx = int(self._parser.get('G29 Racing Wheel', 'reverse'))
-        # # self._handbrake_idx = int(
-        # #     self._parser.get('G29 Racing Wheel', 'handbrake'))
-
         # self._steer_idx = int(0)
            
         # self._throttle_idx = int(1)
@@ -764,10 +753,19 @@ class KeyboardControl(object):
         # self._handbrake_idx = int(4)
 
 
+    def begin_timer(self, world):
+        self.timer_mode.start()
+        world.hud.warning_change_drive_mode(self._autopilot_enabled)
 
 
     def change_autonomous_mode(self, world):
-        # self._control.throttle = 0.0
+
+        world.player.apply_control(carla.VehicleControl(throttle = 0.0))
+        self._control.throttle = 0.0
+        world.player.get_control().throttle = 0.0            
+        self._autopilot_enabled = not self._autopilot_enabled
+
+
         self.flag_timer = False
         world.player.set_autopilot(self._autopilot_enabled)
         self.timer_mode.cancel()
@@ -1035,6 +1033,7 @@ class HUD(object):
         self._font_mono = pygame.font.Font(mono, 12 if os.name == 'nt' else 14)
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
         self._notifications_permanent = FadingText(font, (width, 40), (width - 200 , 0))
+        self._notifications_warning = FadingText(font, (550, 40), (width - (width/2) - 275 , 100))
         self.help = HelpText(pygame.font.Font(mono, 16), width, height)
         self.server_fps = 0
         self.frame = 0
@@ -1054,6 +1053,7 @@ class HUD(object):
     def tick(self, world, clock):
         self._notifications.tick(world, clock)
         self._notifications_permanent.tick(world, clock)
+        self._notifications_warning.tick(world, clock)
         if not self._show_info:
             return
         t = world.player.get_transform()
@@ -1162,7 +1162,16 @@ class HUD(object):
                 v_offset += 18
         self._notifications.render(display)
         self._notifications_permanent.render(display)
+        self._notifications_warning.render(display)
         self.help.render(display)
+
+    def warning_change_drive_mode(self, autopilot):
+        if (self.autopilot_enabled):
+            text = 'Manual driving mode will be set in 3 seconds'
+        else:
+            text = 'Autonomous driving mode will be set in 3 seconds'
+
+        self._notifications_warning.set_text(text, seconds = 3)
 
     def drive_mode_display(self):
         if (self.autopilot_enabled):
@@ -1171,7 +1180,6 @@ class HUD(object):
             text = 'Manual mode'
         # print(text)
         self._notifications_permanent.set_text(text, seconds=1)
-
     
 # ==============================================================================
 # -- FadingText ----------------------------------------------------------------
@@ -1193,7 +1201,6 @@ class FadingText(object):
         self.surface.fill((0, 0, 0, 0))
         self.surface.blit(text_texture, (10, 11))
  
-
     def tick(self, _, clock):
         delta_seconds = 1e-3 * clock.get_time()
         self.seconds_left = max(0.0, self.seconds_left - delta_seconds)
