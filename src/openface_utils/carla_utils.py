@@ -760,14 +760,15 @@ class KeyboardControl(object):
 
     def change_autonomous_mode(self, world):
 
-        world.player.apply_control(carla.VehicleControl(throttle = 0.0))
-        self._control.throttle = 0.0
-        world.player.get_control().throttle = 0.0            
+        self.flag_timer = False 
+
         self._autopilot_enabled = not self._autopilot_enabled
-
-
-        self.flag_timer = False
         world.player.set_autopilot(self._autopilot_enabled)
+
+        # world.player.apply_control(carla.VehicleControl(throttle = 0.0))
+        # self._control.throttle = 0.0
+        # world.player.get_control().throttle = 0.0 
+
         self.timer_mode.cancel()
         self.timer_mode = RepeatTimer(3.0, lambda:self.change_autonomous_mode(world))
 
@@ -876,12 +877,7 @@ class KeyboardControl(object):
                     elif self._control.manual_gear_shift and event.key == K_PERIOD:
                         self._control.gear = self._control.gear + 1
                     elif event.key == K_p and not pygame.key.get_mods() & KMOD_CTRL:
-                        self._autopilot_enabled = not self._autopilot_enabled
-                        #Add delay of 3 second to notificate the user
-                        self.timer_mode.start()
-                        # world.player.set_autopilot(self._autopilot_enabled)
-                        world.hud.notification(
-                            'Autopilot cambiando en 3 segundos %s' % ('On' if self._autopilot_enabled else 'Off'))
+                        self.begin_timer(world)
                     elif event.key == K_l and pygame.key.get_mods() & KMOD_CTRL:
                         current_lights ^= carla.VehicleLightState.Special1
                     elif event.key == K_l and pygame.key.get_mods() & KMOD_SHIFT:
@@ -1033,7 +1029,7 @@ class HUD(object):
         self._font_mono = pygame.font.Font(mono, 12 if os.name == 'nt' else 14)
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
         self._notifications_permanent = FadingText(font, (width, 40), (width - 200 , 0))
-        self._notifications_warning = FadingText(font, (550, 40), (width - (width/2) - 275 , 100))
+        self._notifications_warning = FadingText(font, (550, 40), (width - (width / 2) - 275 , 100))
         self.help = HelpText(pygame.font.Font(mono, 16), width, height)
         self.server_fps = 0
         self.frame = 0
@@ -1054,6 +1050,8 @@ class HUD(object):
         self._notifications.tick(world, clock)
         self._notifications_permanent.tick(world, clock)
         self._notifications_warning.tick(world, clock)
+
+        self.drive_mode_display()  
         if not self._show_info:
             return
         t = world.player.get_transform()
@@ -1114,7 +1112,7 @@ class HUD(object):
                 vehicle_type = get_actor_display_name(vehicle, truncate=22)
                 self._info_text.append('% 4dm %s' % (d, vehicle_type))
                  
-        self.drive_mode_display()        
+              
 
     def toggle_info(self):
         self._show_info = not self._show_info
