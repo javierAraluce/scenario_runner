@@ -56,9 +56,9 @@ from __future__ import print_function
 
 import carla
 
-from examples.manual_control import (CollisionSensor, LaneInvasionSensor, GnssSensor, IMUSensor)
+# from examples.manual_control import (CollisionSensor, LaneInvasionSensor, GnssSensor, IMUSensor)
 
-from openface_utils.carla_utils import CameraManager, HUD, KeyboardControl, CameraManagerRGB, CameraManagerDepth, CameraManagerSemantic, World, RepeatTimer
+from openface_utils.carla_utils import CameraManager, HUD, KeyboardControl, CameraManagerRGB, CameraManagerDepth, CameraManagerSemantic, World, RepeatTimer, CollisionSensor, LaneInvasionSensor, GnssSensor, IMUSensor
 from srunner.autoagents.sensor_interface import SensorInterface
 
 import os
@@ -232,7 +232,6 @@ def game_loop(args):
 
             if (change_mode and controller.flag_timer == False):
                 controller.flag_timer = True
-                # world.hud.notification('Autopilot cambiando en 3 segundos %s' % ('On' if controller._autopilot_enabled else 'Off', 3)
 
                 controller.begin_timer(world)
                 # controller.timer_mode = RepeatTimer(3.0, lambda:controller.change_autonomous_mode(world))
