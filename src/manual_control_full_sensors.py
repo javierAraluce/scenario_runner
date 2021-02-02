@@ -70,6 +70,7 @@ import pygame
 import camera_utils
 
 import rospy
+from std_msgs.msg import String
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -93,6 +94,8 @@ class WorldSR(World):
     # sensor_interface = SensorInterface()
 
     def restart(self):
+
+        self.pub = rospy.Publisher('carla/hero/drive_mode', String, queue_size=10)
 
         if self.restarted:
             return
@@ -169,6 +172,10 @@ class WorldSR(World):
         self.hud.tick(self, clock)
         return True
 
+    def talker(self, change_mode, autopilot):
+        hello_str = "change_mode: " + str(change_mode) + ", autopilot: " + str(autopilot)
+        self.pub.publish(hello_str)
+
 # ==============================================================================
 # -- change_mode() ---------------------------------------------------------------
 # ==============================================================================
@@ -203,12 +210,12 @@ def autonomous_to_manual_mode(localization, map):
         # pygame.event.post(newevent) #add the event to the queue
 
 
-
 # ==============================================================================
 # -- game_loop() ---------------------------------------------------------------
 # ==============================================================================
 
 def game_loop(args):
+
     pygame.init()
     pygame.font.init()
     world = None
@@ -228,26 +235,19 @@ def game_loop(args):
         print(map)
 
         clock = pygame.time.Clock()
-        while True:
+        while not rospy.core.is_shutdown():
+
+            
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode = autonomous_to_manual_mode(world.player.get_transform().location, map)
+            world.talker(controller.flag_timer, hud.autopilot_enabled)
 
             if (change_mode and controller.flag_timer == False):
                 controller.flag_timer = True
 
                 controller.begin_timer(world)
-                # controller.timer_mode = RepeatTimer(3.0, lambda:controller.change_autonomous_mode(world))
-               
-                
-                # world.player.apply_control(carla.VehicleControl(throttle = 0.0))
-                # controller._control.throttle = 0.0
-                # world.player.get_control().throttle = 0.0
-                
-                # controller._autopilot_enabled = not controller._autopilot_enabled
-                # Add delay of 3 second to notificate the user
-                # print("Ac: ", world.player.get_control().throttle)
             
-            clock.tick_busy_loop(60)
+            clock.tick_busy_loop(30)
             if controller.parse_events(client, world, clock):
                 return
             if not world.tick(clock):
@@ -273,6 +273,16 @@ def game_loop(args):
 
 
 def main():
+
+    """
+    main function
+    """
+    rospy.init_node('carla_manual_control', anonymous=True)
+    
+
+
+
+
     argparser = argparse.ArgumentParser(
         description='CARLA Manual Control Client')
     argparser.add_argument(
