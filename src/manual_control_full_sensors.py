@@ -72,6 +72,8 @@ import camera_utils
 import rospy
 from std_msgs.msg import String
 
+from carla_utils_msgs.msg import DriveMode
+
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
 # ==============================================================================
@@ -95,7 +97,7 @@ class WorldSR(World):
 
     def restart(self):
 
-        self.pub = rospy.Publisher('carla/hero/drive_mode', String, queue_size=10)
+        self.pub = rospy.Publisher('carla/hero/drive_mode', DriveMode, queue_size=10)
 
         if self.restarted:
             return
@@ -173,8 +175,17 @@ class WorldSR(World):
         return True
 
     def talker(self, change_mode, autopilot):
-        hello_str = "change_mode: " + str(change_mode) + ", autopilot: " + str(autopilot)
-        self.pub.publish(hello_str)
+        msg = DriveMode()
+        msg.header.stamp = rospy.Time.now() 
+        msg.transition = change_mode
+        if autopilot:
+            msg.autonomous = True
+            msg.manual = False
+        else:
+            msg.autonomous = False
+            msg.manual = True
+
+        self.pub.publish(msg)
 
 # ==============================================================================
 # -- change_mode() ---------------------------------------------------------------
