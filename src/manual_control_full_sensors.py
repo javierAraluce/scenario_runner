@@ -288,7 +288,7 @@ def main():
     """
     main function
     """
-    rospy.init_node('carla_manual_control', anonymous=True)
+    rospy.init_node('carla_manual_control_scenario', anonymous=True)
     
 
 
