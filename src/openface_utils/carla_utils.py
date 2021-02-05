@@ -753,14 +753,22 @@ class KeyboardControl(object):
         # self._handbrake_idx = int(4)
 
 
+        pygame.mixer.init()
+        path = '/home/robesafe/Carla/scenario_runner/src/openface_utils/beep-01a.wav'
+        self._change_mode_beep = pygame.mixer.Sound(path)
+
+
     def begin_timer(self, world):
         self.timer_mode.start()
+        self._change_mode_beep.play()
         world.hud.warning_change_drive_mode(self._autopilot_enabled)
 
 
     def change_autonomous_mode(self, world):
 
-        self.flag_timer = False 
+        self.flag_timer = False
+        self._change_mode_beep.stop() 
+        
 
         self._autopilot_enabled = not self._autopilot_enabled
         world.player.set_autopilot(self._autopilot_enabled)
