@@ -59,7 +59,6 @@ import carla
 # from examples.manual_control import (CollisionSensor, LaneInvasionSensor, GnssSensor, IMUSensor)
 
 from openface_utils.carla_utils import CameraManager, HUD, KeyboardControl, CameraManagerRGB, CameraManagerDepth, CameraManagerSemantic, World, RepeatTimer, CollisionSensor, LaneInvasionSensor, GnssSensor, IMUSensor
-from srunner.autoagents.sensor_interface import SensorInterface
 
 import os
 import argparse
@@ -67,11 +66,8 @@ import logging
 import time
 import pygame
 
-import camera_utils
 
 import rospy
-from std_msgs.msg import String
-
 from carla_utils_msgs.msg import DriveMode
 
 # ==============================================================================
@@ -93,7 +89,6 @@ class WorldSR(World):
 
 
     restarted = False
-    # sensor_interface = SensorInterface()
 
     def restart(self):
 
@@ -174,6 +169,18 @@ class WorldSR(World):
         self.hud.tick(self, clock)
         return True
 
+    def destroySensors(self):
+            self.camera_manager_rgb.sensor.destroy()
+            self.camera_manager_rgb.sensor = None
+            self.camera_manager_rgb._index = None
+
+    def destroy(self):
+        actors = [
+            self.collision_sensor.sensor,
+            self.lane_invasion_sensor.sensor,
+            self.gnss_sensor.sensor,
+            self.player]
+
     def talker(self, change_mode, autopilot):
         msg = DriveMode()
         msg.header.stamp = rospy.Time.now() 
@@ -242,15 +249,15 @@ def game_loop(args):
         hud = HUD(args.width, args.height) #, controller._autopilot_enabled)
         world = WorldSR(client.get_world(), hud, args)
         controller = KeyboardControl(world, args.autopilot)
-        map = world.map
-        print(map)
+        town = world.map
+        print(town)
 
         clock = pygame.time.Clock()
         while not rospy.core.is_shutdown():
 
             
             hud.autopilot_enabled = controller._autopilot_enabled
-            change_mode = autonomous_to_manual_mode(world.player.get_transform().location, map)
+            change_mode = autonomous_to_manual_mode(world.player.get_transform().location, town)
             world.talker(controller.flag_timer, hud.autopilot_enabled)
 
             if (change_mode and controller.flag_timer == False):
@@ -289,10 +296,6 @@ def main():
     main function
     """
     rospy.init_node('carla_manual_control_scenario', anonymous=True)
-    
-
-
-
 
     argparser = argparse.ArgumentParser(
         description='CARLA Manual Control Client')
