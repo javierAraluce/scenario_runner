@@ -200,7 +200,8 @@ class WorldSR(World):
 
 def autonomous_to_manual_mode(localization, map):
     # print('X: ', round(localization.x), 'Y: ', round(localization.y))
-    if (map.name == 'Town01'):
+    print((-305 < round(localization.x) < (-301)) and (433 < round(localization.y) < 438))
+    if map.name == 'Town01':
         if ((round(localization.x) == 305) and (193 < round(localization.y) < 197)):
             change = True
         elif ((round(localization.x) == 142) and (193 < round(localization.y) < 197)):
@@ -209,19 +210,23 @@ def autonomous_to_manual_mode(localization, map):
             change = True
         else:
             change = False
-    elif (map.name == 'Town03'):
-        # if ((round(localization.x) == 305) and (193 < round(localization.y) < 197)):
-        #     change = True
-        # elif ((round(localization.x) == 142) and (193 < round(localization.y) < 197)):
-        #     change = True
-        # elif ((round(localization.x) == 42) and (325 < round(localization.y) < 328)):
-        #     change = True
-        # else:
-        #     change = False
-        change = False
+    elif map.name == 'Town04':
+        if ((-305 < round(localization.x) < (-301)) and (433 < round(localization.y) < 438)):
+            print("Dentro")
+            change = True
+        elif ((411 < round(localization.x) < 414) and (193 < round(localization.y) < 197)):
+            change = True
+        elif ((115 < round(localization.x) < 119) and ((-388) < round(localization.y) < (-394))):
+            change = True
+        else:
+            change = False
     else:
         print('mal')
-        change = False        
+        change = False
+
+
+
+    print("change ", change)            
     return change
     
         # newevent = pygame.event.Event(pygame.locals.KEYDOWN, unicode="p", key=pygame.locals.K_p, mod=pygame.locals.KMOD_NONE) #create the event
@@ -259,6 +264,8 @@ def game_loop(args):
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode = autonomous_to_manual_mode(world.player.get_transform().location, town)
             world.talker(controller.flag_timer, hud.autopilot_enabled)
+
+            print("change_mode ", change_mode, " controller.flag_timer ", controller.flag_timer)
 
             if (change_mode and controller.flag_timer == False):
                 controller.flag_timer = True
@@ -322,7 +329,7 @@ def main():
     argparser.add_argument(
         '--res',
         metavar='WIDTHxHEIGHT',
-        default='1920x1080',
+        default='1280x720',
         help='window resolution (default: 1280x720)5760x1080') 
     args = argparser.parse_args()
 
