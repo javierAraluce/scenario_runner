@@ -214,7 +214,9 @@ class RouteScenario(BasicScenario):
         ego_vehicle = CarlaDataProvider.request_new_actor('vehicle.lincoln.mkz2017',
                                                           elevate_transform,
                                                           rolename='hero')
-
+        # ego_vehicle = CarlaDataProvider.request_new_actor('vehicle.tesla.model3',
+        #                                                   elevate_transform,
+        #                                                   rolename='hero')
         return ego_vehicle
 
     def _estimate_route_timeout(self):

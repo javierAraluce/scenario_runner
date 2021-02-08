@@ -407,7 +407,9 @@ class CameraManagerDepth(object):
         self.args_height = args_height
         Attachment = carla.AttachmentType
         self._camera_transforms = [	#Add different camera positions
-             (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid)
             # (carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15.0)), Attachment.Rigid)
             ]
@@ -425,6 +427,7 @@ class CameraManagerDepth(object):
             #bp.set_attribute('image_size_y', str(hud.dim[1]))
             bp.set_attribute('image_size_x', str(self.args_width))
             bp.set_attribute('image_size_y', str(self.args_height))
+            bp.set_attribute('fov', '120') #100
             if bp.has_attribute('gamma'):
                     bp.set_attribute('gamma', str(gamma_correction))
             item.append(bp)
@@ -514,6 +517,7 @@ class CameraManagerSemantic(object):
             bp = bp_library.find(item[0])
             bp.set_attribute('image_size_x', str(self.args_width))
             bp.set_attribute('image_size_y', str(self.args_height))
+            bp.set_attribute('fov', '120') #100
             if bp.has_attribute('gamma'):
                     bp.set_attribute('gamma', str(gamma_correction))
             item.append(bp)
@@ -591,7 +595,8 @@ class CameraManager(object):
             (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
             (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
             (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=0, y =-0.35 ,z=1.25), carla.Rotation(pitch=0, roll=0, yaw = 0)), Attachment.Rigid)]
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x = 0.2, y = -0.3 ,z = 1.25), carla.Rotation(pitch = 0, roll = 0, yaw = 0)), Attachment.Rigid)]
 
         self.transform_index = 1
         self.sensors = [
@@ -606,6 +611,7 @@ class CameraManager(object):
             if item[0].startswith('sensor.camera'):
                 bp.set_attribute('image_size_x', str(hud.dim[0]))
                 bp.set_attribute('image_size_y', str(hud.dim[1]))
+                bp.set_attribute('fov', '120') #100
                 if bp.has_attribute('gamma'):
                     bp.set_attribute('gamma', str(gamma_correction))
                 for attr_name, attr_value in item[3].items():
@@ -1036,7 +1042,7 @@ class HUD(object):
         mono = pygame.font.match_font(mono)
         self._font_mono = pygame.font.Font(mono, 12 if os.name == 'nt' else 14)
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
-        self._notifications_permanent = FadingText(font, (width, 40), (width - 200 , 0))
+        self._notifications_permanent = FadingText(font, (200, 40), ((width * 2/3) - 200 , 0))
         self._notifications_warning = FadingText(font, (550, 40), (width - (width / 2) - 275 , 100))
         self.help = HelpText(pygame.font.Font(mono, 16), width, height)
         self.server_fps = 0

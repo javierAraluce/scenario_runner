@@ -65,10 +65,12 @@ import argparse
 import logging
 import time
 import pygame
+import math
 
 
 import rospy
 from carla_utils_msgs.msg import DriveMode
+from std_msgs.msg import Float64
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -92,7 +94,8 @@ class WorldSR(World):
 
     def restart(self):
 
-        self.pub = rospy.Publisher('carla/hero/drive_mode', DriveMode, queue_size=10)
+        self.pub = rospy.Publisher('carla/hero/drive_mode', DriveMode, queue_size = 10)
+        self.pub_velocity = rospy.Publisher('carla/hero/velocity', Float64, queue_size = 10)
 
         if self.restarted:
             return
@@ -200,7 +203,6 @@ class WorldSR(World):
 
 def autonomous_to_manual_mode(localization, map):
     # print('X: ', round(localization.x), 'Y: ', round(localization.y))
-    print((-305 < round(localization.x) < (-301)) and (433 < round(localization.y) < 438))
     if map.name == 'Town01':
         if ((round(localization.x) == 305) and (193 < round(localization.y) < 197)):
             change = True
@@ -212,11 +214,10 @@ def autonomous_to_manual_mode(localization, map):
             change = False
     elif map.name == 'Town04':
         if ((-305 < round(localization.x) < (-301)) and (433 < round(localization.y) < 438)):
-            print("Dentro")
             change = True
-        elif ((411 < round(localization.x) < 414) and (193 < round(localization.y) < 197)):
+        elif ((411 < round(localization.x) < 414) and (-163 < round(localization.y) < -160)):
             change = True
-        elif ((115 < round(localization.x) < 119) and ((-388) < round(localization.y) < (-394))):
+        elif ((115 < round(localization.x) < 119) and ((-394) < round(localization.y) < (-388))):
             change = True
         else:
             change = False
@@ -224,9 +225,7 @@ def autonomous_to_manual_mode(localization, map):
         print('mal')
         change = False
 
-
-
-    print("change ", change)            
+          
     return change
     
         # newevent = pygame.event.Event(pygame.locals.KEYDOWN, unicode="p", key=pygame.locals.K_p, mod=pygame.locals.KMOD_NONE) #create the event
@@ -249,23 +248,23 @@ def game_loop(args):
 
         display = pygame.display.set_mode(
             (args.width, args.height),
-            pygame.HWSURFACE | pygame.DOUBLEBUF)  #| pygame.FULLSCREEN)
+            pygame.HWSURFACE | pygame.DOUBLEBUF) # | pygame.FULLSCREEN)
 
         hud = HUD(args.width, args.height) #, controller._autopilot_enabled)
         world = WorldSR(client.get_world(), hud, args)
         controller = KeyboardControl(world, args.autopilot)
         town = world.map
-        print(town)
 
         clock = pygame.time.Clock()
         while not rospy.core.is_shutdown():
+            v = world.player.get_velocity()
+            velocity = 3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)
+            world.pub_velocity.publish(velocity)
 
-            
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode = autonomous_to_manual_mode(world.player.get_transform().location, town)
             world.talker(controller.flag_timer, hud.autopilot_enabled)
 
-            print("change_mode ", change_mode, " controller.flag_timer ", controller.flag_timer)
 
             if (change_mode and controller.flag_timer == False):
                 controller.flag_timer = True
@@ -329,7 +328,7 @@ def main():
     argparser.add_argument(
         '--res',
         metavar='WIDTHxHEIGHT',
-        default='1280x720',
+        default='5760x1080',
         help='window resolution (default: 1280x720)5760x1080') 
     args = argparser.parse_args()
 
