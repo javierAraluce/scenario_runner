@@ -248,7 +248,7 @@ def game_loop(args):
 
         display = pygame.display.set_mode(
             (args.width, args.height),
-            pygame.HWSURFACE | pygame.DOUBLEBUF) # | pygame.FULLSCREEN)
+            pygame.HWSURFACE | pygame.DOUBLEBUF)# | pygame.FULLSCREEN)
 
         hud = HUD(args.width, args.height) #, controller._autopilot_enabled)
         world = WorldSR(client.get_world(), hud, args)

@@ -747,16 +747,16 @@ class KeyboardControl(object):
         if joystick_count > 1:
             raise ValueError("Please Connect Just One Joystick")
 
-        # self._joystick = pygame.joystick.Joystick(0)
-        # self._joystick.init()
+        self._joystick = pygame.joystick.Joystick(0)
+        self._joystick.init()
 
-        # self._steer_idx = int(0)
+        self._steer_idx = int(0)
            
-        # self._throttle_idx = int(1)
+        self._throttle_idx = int(1)
       
-        # self._brake_idx = int(2)
-        # self._reverse_idx = int(3)
-        # self._handbrake_idx = int(4)
+        self._brake_idx = int(2)
+        self._reverse_idx = int(3)
+        self._handbrake_idx = int(4)
 
 
         pygame.mixer.init()
@@ -923,7 +923,7 @@ class KeyboardControl(object):
         if not self._autopilot_enabled:
             if isinstance(self._control, carla.VehicleControl):
                 self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
-                # self._parse_vehicle_wheel()
+                self._parse_vehicle_wheel()
                 self._control.reverse = self._control.gear < 0
                 # Set automatic control-related vehicle lights
                 if self._control.brake:
