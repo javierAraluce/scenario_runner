@@ -71,6 +71,7 @@ import math
 import rospy
 from carla_utils_msgs.msg import DriveMode
 from std_msgs.msg import Float64
+from geometry_msgs.msg import PointStamped
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -96,6 +97,10 @@ class WorldSR(World):
 
         self.pub = rospy.Publisher('carla/hero/drive_mode', DriveMode, queue_size = 10)
         self.pub_velocity = rospy.Publisher('carla/hero/velocity', Float64, queue_size = 10)
+        
+        rospy.Subscriber("/t4ac/v2u/gaze_focalization/gaze_focalization", PointStamped, self.callback_gaze)
+
+        self.gaze = PointStamped()
 
         if self.restarted:
             return
@@ -197,6 +202,10 @@ class WorldSR(World):
 
         self.pub.publish(msg)
 
+    def callback_gaze(self, msg):
+        self.gaze =  msg
+
+
 # ==============================================================================
 # -- change_mode() ---------------------------------------------------------------
 # ==============================================================================
@@ -241,6 +250,7 @@ def game_loop(args):
     pygame.init()
     pygame.font.init()
     world = None
+    RED =   (255,   0,   0)
 
     try:
         client = carla.Client(args.host, args.port)
@@ -248,9 +258,9 @@ def game_loop(args):
 
         display = pygame.display.set_mode(
             (args.width, args.height),
-            pygame.HWSURFACE | pygame.DOUBLEBUF)# | pygame.FULLSCREEN)
+            pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.FULLSCREEN)
 
-        hud = HUD(args.width, args.height) #, controller._autopilot_enabled)
+        hud = HUD(args.width, args.height)
         world = WorldSR(client.get_world(), hud, args)
         controller = KeyboardControl(world, args.autopilot)
         town = world.map
@@ -259,7 +269,7 @@ def game_loop(args):
         while not rospy.core.is_shutdown():
             v = world.player.get_velocity()
             velocity = 3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)
-            world.pub_velocity.publish(velocity)
+            world.pub_velocity.publish(int(velocity))
 
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode = autonomous_to_manual_mode(world.player.get_transform().location, town)
@@ -277,7 +287,15 @@ def game_loop(args):
             if not world.tick(clock):
                 return
             # world.render(display)
+
+
+            
+
             world.render(display, controller.camera_rendered)
+
+            ###Draw gaze
+            pygame.draw.circle(display, RED, [world.gaze.point.x + 1920, world.gaze.point.y], 10)
+
             pygame.display.flip()
 
     finally:
