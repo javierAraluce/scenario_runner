@@ -258,7 +258,7 @@ def game_loop(args):
 
         display = pygame.display.set_mode(
             (args.width, args.height),
-            pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.FULLSCREEN)
+            pygame.HWSURFACE | pygame.DOUBLEBUF)# | pygame.FULLSCREEN)
 
         hud = HUD(args.width, args.height)
         world = WorldSR(client.get_world(), hud, args)
@@ -346,7 +346,7 @@ def main():
     argparser.add_argument(
         '--res',
         metavar='WIDTHxHEIGHT',
-        default='5760x1080',
+        default='1280x720',
         help='window resolution (default: 1280x720)5760x1080') 
     args = argparser.parse_args()
 
