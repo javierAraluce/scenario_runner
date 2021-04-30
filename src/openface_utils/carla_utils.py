@@ -154,6 +154,8 @@ except ImportError:
 
 class World(object):
     def __init__(self, carla_world, hud, args):
+
+        self.transition_timer =  args.transition_timer
         self.world = carla_world
         self.actor_role_name = args.rolename
         self.map = self.world.get_map()
@@ -720,6 +722,7 @@ class KeyboardControl(object):
     def __init__(self, world, start_in_autopilot):
 
         self.camera_rendered = 1
+        self.transition_timer = world.transition_timer
 
         self._autopilot_enabled = start_in_autopilot
         if isinstance(world.player, carla.Vehicle):
@@ -736,7 +739,7 @@ class KeyboardControl(object):
         self._steer_cache = 0.0
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
-        self.timer_mode = RepeatTimer(3.0, lambda:self.change_autonomous_mode(world))
+        self.timer_mode = RepeatTimer(self.transition_timer, lambda:self.change_autonomous_mode(world))
         self.flag_timer = False
 
 
@@ -761,7 +764,7 @@ class KeyboardControl(object):
 
 
         pygame.mixer.init()
-        path = '/home/robesafe/Carla/scenario_runner/src/openface_utils/beep-01a.wav'
+        path = 'openface_utils/beep-01a.wav'
         self._change_mode_beep = pygame.mixer.Sound(path)
 
 
@@ -785,7 +788,7 @@ class KeyboardControl(object):
         # world.player.get_control().throttle = 0.0 
 
         self.timer_mode.cancel()
-        self.timer_mode = RepeatTimer(3.0, lambda:self.change_autonomous_mode(world))
+        self.timer_mode = RepeatTimer(self.transition_timer, lambda:self.change_autonomous_mode(world))
 
     def parse_events(self, client, world, clock):
         if isinstance(self._control, carla.VehicleControl):
@@ -1065,6 +1068,7 @@ class HUD(object):
         self._notifications.tick(world, clock)
         self._notifications_permanent.tick(world, clock)
         self._notifications_warning.tick(world, clock)
+        self.transition_timer = world.transition_timer
 
         self.drive_mode_display()  
         if not self._show_info:
@@ -1180,11 +1184,11 @@ class HUD(object):
 
     def warning_change_drive_mode(self, autopilot):
         if (self.autopilot_enabled):
-            text = 'Manual driving mode will be set in 3 seconds'
+            text = 'Manual driving mode will be set in' + str(self.transition_timer) + 'seconds'
         else:
-            text = 'Autonomous driving mode will be set in 3 seconds'
+            text = 'Autonomous driving mode will be set in ' + str(self.transition_timer) + ' seconds'
 
-        self._notifications_warning.set_text(text, seconds = 3)
+        self._notifications_warning.set_text(text, seconds = self.transition_timer)
 
     def drive_mode_display(self):
         if (self.autopilot_enabled):

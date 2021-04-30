@@ -231,7 +231,7 @@ def autonomous_to_manual_mode(localization, map):
         else:
             change = False
     else:
-        print('mal')
+        # print('mal')
         change = False
 
           
@@ -262,7 +262,9 @@ def game_loop(args):
 
         hud = HUD(args.width, args.height)
         world = WorldSR(client.get_world(), hud, args)
+        print(args.transition_timer)
         controller = KeyboardControl(world, args.autopilot)
+
         town = world.map
 
         clock = pygame.time.Clock()
@@ -273,7 +275,7 @@ def game_loop(args):
 
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode = autonomous_to_manual_mode(world.player.get_transform().location, town)
-            world.talker(controller.flag_timer, hud.autopilot_enabled)
+            # world.talker(controller.flag_timer, hud.autopilot_enabled)
 
 
             if (change_mode and controller.flag_timer == False):
@@ -293,7 +295,7 @@ def game_loop(args):
 
             world.render(display, controller.camera_rendered)
 
-            ###Draw gaze
+            ##Draw gaze
             pygame.draw.circle(display, RED, [world.gaze.point.x + 1920, world.gaze.point.y], 10)
 
             pygame.display.flip()
@@ -340,6 +342,12 @@ def main():
         type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
+        '-t', '--transition_timer',
+        metavar='T',
+        default=3,
+        type=int,
+        help='transition_timer')
+    argparser.add_argument(
         '-a', '--autopilot',
         action='store_true',
         help='enable autopilot')
@@ -369,6 +377,7 @@ def main():
     except KeyboardInterrupt:
         print('\nCancelled by user. Bye!')
     except Exception as error:
+        print(error)
         logging.exception(error)
 
 
