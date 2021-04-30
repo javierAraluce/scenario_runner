@@ -19,6 +19,12 @@ export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI
 ```
 
 
+Problemas install
+```
+pip3 install --upgrade setuptools
+pip3 install --upgrade pip
+
+```
 ScenarioRunner for CARLA
 ========================
 This repository contains traffic scenario definition and an execution engine
