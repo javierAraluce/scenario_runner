@@ -73,6 +73,9 @@ from carla_utils_msgs.msg import DriveMode
 from std_msgs.msg import Float64
 from geometry_msgs.msg import PointStamped
 
+from openface_utils import geometric_functions
+import numpy as np
+
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
 # ==============================================================================
@@ -97,6 +100,7 @@ class WorldSR(World):
 
         self.pub = rospy.Publisher('carla/hero/drive_mode', DriveMode, queue_size = 10)
         self.pub_velocity = rospy.Publisher('carla/hero/velocity', Float64, queue_size = 10)
+        self.pub_ttc = rospy.Publisher('carla/hero/ttc', Float64, queue_size = 10)
         
         rospy.Subscriber("/t4ac/v2u/gaze_focalization/gaze_focalization", PointStamped, self.callback_gaze)
 
@@ -189,7 +193,7 @@ class WorldSR(World):
             self.gnss_sensor.sensor,
             self.player]
 
-    def talker(self, change_mode, autopilot):
+    def drive_mode_pub(self, change_mode, autopilot):
         msg = DriveMode()
         msg.header.stamp = rospy.Time.now() 
         msg.transition = change_mode
@@ -201,6 +205,10 @@ class WorldSR(World):
             msg.manual = True
 
         self.pub.publish(msg)
+
+    def ttc_pub(self, ttc):
+        msg = Float64()
+
 
     def callback_gaze(self, msg):
         self.gaze =  msg
@@ -230,6 +238,11 @@ def autonomous_to_manual_mode(localization, map):
             change = True
         else:
             change = False
+    elif map.name == 'Town03':
+        if ((71 < round(localization.x) < 74) and (6 < round(localization.y) < 8)):
+            change = True
+        else:
+            change = False
     else:
         # print('mal')
         change = False
@@ -239,6 +252,73 @@ def autonomous_to_manual_mode(localization, map):
     
         # newevent = pygame.event.Event(pygame.locals.KEYDOWN, unicode="p", key=pygame.locals.K_p, mod=pygame.locals.KMOD_NONE) #create the event
         # pygame.event.post(newevent) #add the event to the queue
+
+def vehicle_to_bbox(linear_velocity, angular_velocity, transform, angle, dt):
+    """
+    Transform vehicle to a bbox, knowing velocity and position 
+    """
+    vehicle_width = 1.7
+    vehicle_length = 4.4
+    abs_vel = math.sqrt(pow(linear_velocity.x,2) + pow(linear_velocity.y,2))
+    x_dt = transform.location.x + abs_vel * dt * math.cos(transform.rotation.yaw) # x centroid
+    y_dt = transform.location.x + abs_vel * dt * math.cos(transform.rotation.yaw) # y centroid
+    scale = vehicle_width * vehicle_length # scale is assumed to be constant for the ego-vehicle
+    aspect_ratio = vehicle_width / vehicle_length # aspect_ratio is assumed to be constant for the ego-vehicle
+
+    w = vehicle_width
+    h = scale / w
+
+    theta = angle + angular_velocity.z * dt # Theta (orientation). 
+
+
+    bbox = [x_dt, y_dt, w, h, theta]
+    return bbox
+
+def time_to_collision(world):
+    """
+    Time to collision between ego_vehicle and other dynamics objects 
+    """
+
+    ego_vehicle_linear_velocity = world.player.get_velocity()
+    ego_vehicle_angular_velocity = world.player.get_angular_velocity() 
+    ego_vehicle_transform = world.player.get_transform()
+    vehicles = world.world.get_actors().filter('vehicle.*')
+    ttc = np.zeros((2, 2))
+
+    for i, vehicle in enumerate(vehicles):
+        if vehicle.id != world.player.id:
+            object_velocity_linear = vehicle.get_velocity()
+            object_velocity_angular = world.player.get_angular_velocity() 
+            object_transform = vehicle.get_transform()
+
+            for dt in range(0, 30):
+                if dt == 0:
+                    angle_ego = ego_vehicle_transform.rotation.yaw
+                    angle_object = object_transform.rotation.yaw
+                else:
+                    angle_ego = previous_angle_ego
+                    angle_object = previous_angle_object
+
+                dt = dt * 0.1
+                ego_vehicle_bbox = vehicle_to_bbox(ego_vehicle_linear_velocity, ego_vehicle_angular_velocity, ego_vehicle_transform, angle_ego, dt)
+                previous_angle_ego = ego_vehicle_bbox[4] # Save theta for next iteration
+                object_bbox = vehicle_to_bbox(object_velocity_linear, object_velocity_angular, object_transform, angle_object, dt)
+                previous_angle_object = object_bbox[4] # Save theta for next iteration
+
+                area_iou = geometric_functions.iou(ego_vehicle_bbox, object_bbox) # Compute iou between both bbox
+
+                if (area_iou > 0.0):
+                    ttc[i - 1, 1] = dt 
+                    ttc[i - 1, 0] = vehicle.id
+                    break
+                else:
+                    ttc[i - 1, 1] = 1000
+                    ttc[i - 1, 0] = vehicle.id 
+
+    min_ttc = np.min(ttc[:,1])
+    return min_ttc
+    
+
 
 
 # ==============================================================================
@@ -262,7 +342,6 @@ def game_loop(args):
 
         hud = HUD(args.width, args.height)
         world = WorldSR(client.get_world(), hud, args)
-        print(args.transition_timer)
         controller = KeyboardControl(world, args.autopilot)
 
         town = world.map
@@ -273,9 +352,12 @@ def game_loop(args):
             velocity = 3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)
             world.pub_velocity.publish(int(velocity))
 
+            
+            ttc = time_to_collision(world)
+
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode = autonomous_to_manual_mode(world.player.get_transform().location, town)
-            # world.talker(controller.flag_timer, hud.autopilot_enabled)
+            world.drive_mode_pub(controller.flag_timer, hud.autopilot_enabled)
 
 
             if (change_mode and controller.flag_timer == False):
@@ -292,10 +374,9 @@ def game_loop(args):
 
 
             
+            world.render(display, controller.camera_rendered) 
 
-            world.render(display, controller.camera_rendered)
-
-            ##Draw gaze
+            # Draw gaze on screen 
             pygame.draw.circle(display, RED, [world.gaze.point.x + 1920, world.gaze.point.y], 10)
 
             pygame.display.flip()
