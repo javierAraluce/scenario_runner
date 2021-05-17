@@ -13,7 +13,7 @@
   </RoadNetwork>
   <Entities>
     <ScenarioObject name="$vehicle_name">
-      <Vehicle name="vehicle.audi.a2" vehicleCategory="car">
+      <Vehicle name="vehicle.lincoln.mkz2017" vehicleCategory="car">
         <ParameterDeclarations/>
         <Performance maxSpeed="69.444" maxAcceleration="200" maxDeceleration="10.0"/>
         <BoundingBox>
@@ -68,7 +68,7 @@
           <PrivateAction>
             <TeleportAction>
               <Position>
-                <WorldPosition x="32.5" y="7.5" z="0" h="0"/>
+                <WorldPosition x="32.502892" y="7.084588" z="0" h="0"/>
               </Position>
             </TeleportAction>
           </PrivateAction>

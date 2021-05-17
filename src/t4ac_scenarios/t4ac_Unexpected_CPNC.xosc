@@ -11,7 +11,7 @@
   </RoadNetwork>
   <Entities>
     <ScenarioObject name="$vehicle_name">
-      <Vehicle name="vehicle.audi.a2" vehicleCategory="car">  <!-- audi.a2 ; mini.cooperst  ;  citroen.c3 ; toyota.prius  ;   tesla.model3   ;  nissan.micra -->
+      <Vehicle name="vehicle.lincoln.mkz2017" vehicleCategory="car">  <!-- audi.a2 ; mini.cooperst  ;  citroen.c3 ; toyota.prius  ;   tesla.model3   ;  nissan.micra -->
         <ParameterDeclarations/>
         <Performance maxSpeed="69.444" maxAcceleration="200" maxDeceleration="10.0"/>
         <BoundingBox>
@@ -97,7 +97,7 @@
           <PrivateAction>
             <TeleportAction>
               <Position>
-                <WorldPosition x="-74.5" y="-14.5" z="0" h="4.71238898"/>  <!-- INITIAL POSE EGO_VEHICLE -->
+                <WorldPosition x="-74.404480" y="-14.495465" z="0" h="4.71238898"/>  <!-- INITIAL POSE EGO_VEHICLE -->
               </Position>
             </TeleportAction>
           </PrivateAction>

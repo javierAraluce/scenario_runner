@@ -92,8 +92,6 @@ def get_actor_display_name(actor, truncate=250):
 
 class WorldSR(World):
 
-
-
     restarted = False
 
     def restart(self):
@@ -101,6 +99,7 @@ class WorldSR(World):
         self.pub = rospy.Publisher('carla/hero/drive_mode', DriveMode, queue_size = 10)
         self.pub_velocity = rospy.Publisher('carla/hero/velocity', Float64, queue_size = 10)
         self.pub_ttc = rospy.Publisher('carla/hero/ttc', Float64, queue_size = 10)
+        self.pub_line_error = rospy.Publisher('carla/hero/line_error', Float64, queue_size = 10)
         
         rospy.Subscriber("/t4ac/v2u/gaze_focalization/gaze_focalization", PointStamped, self.callback_gaze)
 
@@ -208,6 +207,13 @@ class WorldSR(World):
 
     def ttc_pub(self, ttc):
         msg = Float64()
+        msg = ttc
+        self.pub_ttc.publish(msg)
+
+    def line_error_pub (self, error):
+        msg = Float64()
+        msg = error
+        self.pub_line_error.publish(msg)    
 
 
     def callback_gaze(self, msg):
@@ -260,15 +266,15 @@ def vehicle_to_bbox(linear_velocity, angular_velocity, transform, angle, dt):
     vehicle_width = 1.7
     vehicle_length = 4.4
     abs_vel = math.sqrt(pow(linear_velocity.x,2) + pow(linear_velocity.y,2))
-    x_dt = transform.location.x + abs_vel * dt * math.cos(transform.rotation.yaw) # x centroid
-    y_dt = transform.location.x + abs_vel * dt * math.cos(transform.rotation.yaw) # y centroid
+    x_dt = transform.location.x + abs_vel * dt * math.cos(angle) # x centroid
+    y_dt = transform.location.y + abs_vel * dt * math.sin(angle) # y centroid
     scale = vehicle_width * vehicle_length # scale is assumed to be constant for the ego-vehicle
     aspect_ratio = vehicle_width / vehicle_length # aspect_ratio is assumed to be constant for the ego-vehicle
 
     w = vehicle_width
     h = scale / w
 
-    theta = angle + angular_velocity.z * dt # Theta (orientation). 
+    theta = angle + angular_velocity.z * dt * math.cos(angle) # Theta (orientation). 
 
 
     bbox = [x_dt, y_dt, w, h, theta]
@@ -283,23 +289,25 @@ def time_to_collision(world):
     ego_vehicle_angular_velocity = world.player.get_angular_velocity() 
     ego_vehicle_transform = world.player.get_transform()
     vehicles = world.world.get_actors().filter('vehicle.*')
-    ttc = np.zeros((2, 2))
+    ttc = []
+    vehicle_id = []
 
-    for i, vehicle in enumerate(vehicles):
+    for vehicle in vehicles:
         if vehicle.id != world.player.id:
             object_velocity_linear = vehicle.get_velocity()
             object_velocity_angular = world.player.get_angular_velocity() 
             object_transform = vehicle.get_transform()
 
-            for dt in range(0, 30):
-                if dt == 0:
+
+            for dt_10 in range(0, 30): # 3 seconds window
+                if dt_10 == 0:
                     angle_ego = ego_vehicle_transform.rotation.yaw
                     angle_object = object_transform.rotation.yaw
                 else:
                     angle_ego = previous_angle_ego
                     angle_object = previous_angle_object
 
-                dt = dt * 0.1
+                dt = dt_10 * 0.1
                 ego_vehicle_bbox = vehicle_to_bbox(ego_vehicle_linear_velocity, ego_vehicle_angular_velocity, ego_vehicle_transform, angle_ego, dt)
                 previous_angle_ego = ego_vehicle_bbox[4] # Save theta for next iteration
                 object_bbox = vehicle_to_bbox(object_velocity_linear, object_velocity_angular, object_transform, angle_object, dt)
@@ -308,17 +316,31 @@ def time_to_collision(world):
                 area_iou = geometric_functions.iou(ego_vehicle_bbox, object_bbox) # Compute iou between both bbox
 
                 if (area_iou > 0.0):
-                    ttc[i - 1, 1] = dt 
-                    ttc[i - 1, 0] = vehicle.id
+                    ttc.append(dt)
+                    vehicle_id.append(vehicle.id)
                     break
-                else:
-                    ttc[i - 1, 1] = 1000
-                    ttc[i - 1, 0] = vehicle.id 
 
-    min_ttc = np.min(ttc[:,1])
-    return min_ttc
+    if (len(ttc) > 0):
+        min_ttc = min(ttc)
+        world.ttc_pub(min_ttc)
+        return min_ttc
+    else:
+        return 1000    
     
 
+def line_displacement(world, current_position, initial_position):
+    x_0 = initial_position.x
+    y_0 = initial_position.y
+
+    x_t = current_position.x
+    y_t = current_position.y
+
+    x_error = abs(x_t - x_0)
+    y_error = abs(y_t - y_0)
+    world.line_error_pub(y_error)
+
+    # print(x_error, y_error)
+    return y_error
 
 
 # ==============================================================================
@@ -346,6 +368,9 @@ def game_loop(args):
 
         town = world.map
 
+        waypoint = town.get_waypoint(world.player.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Sidewalk))
+        initial_position = waypoint.transform.location
+
         clock = pygame.time.Clock()
         while not rospy.core.is_shutdown():
             v = world.player.get_velocity()
@@ -354,6 +379,9 @@ def game_loop(args):
 
             
             ttc = time_to_collision(world)
+
+            current_position = world.player.get_transform().location
+            line_error = line_displacement(world, current_position, initial_position)
 
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode = autonomous_to_manual_mode(world.player.get_transform().location, town)
