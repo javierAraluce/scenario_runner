@@ -69,7 +69,8 @@ import math
 
 
 import rospy
-from carla_utils_msgs.msg import DriveMode
+from carla_utils_msgs.msg import DriveMode 
+from carla_msgs.msg import CarlaEgoVehicleControl
 from std_msgs.msg import Float64
 from geometry_msgs.msg import PointStamped
 
@@ -100,7 +101,8 @@ class WorldSR(World):
         self.pub_velocity = rospy.Publisher('carla/hero/velocity', Float64, queue_size = 10)
         self.pub_ttc = rospy.Publisher('carla/hero/ttc', Float64, queue_size = 10)
         self.pub_line_error = rospy.Publisher('carla/hero/line_error', Float64, queue_size = 10)
-        
+        self.pub_steer_cmd = rospy.Publisher('carla/hero/steer_cmd', CarlaEgoVehicleControl, queue_size = 10)
+
         rospy.Subscriber("/t4ac/v2u/gaze_focalization/gaze_focalization", PointStamped, self.callback_gaze)
 
         self.gaze = PointStamped()
@@ -219,6 +221,14 @@ class WorldSR(World):
     def callback_gaze(self, msg):
         self.gaze =  msg
 
+    def steer_cmd_pub(self, steer_cmd, brake_cmd, thorttle_cmd):
+        msg = CarlaEgoVehicleControl()
+        msg.steer = steer_cmd
+        msg.brake = brake_cmd
+        msg.throttle = thorttle_cmd
+
+        self.pub_steer_cmd.publish(msg)   
+
 
 # ==============================================================================
 # -- change_mode() ---------------------------------------------------------------
@@ -245,7 +255,7 @@ def autonomous_to_manual_mode(localization, map):
         else:
             change = False
     elif map.name == 'Town03':
-        if ((71 < round(localization.x) < 74) and (6 < round(localization.y) < 8)):
+        if ((98 < round(localization.x) < 100) and (3 < round(localization.y) < 10)):
             change = True
         else:
             change = False
@@ -386,6 +396,7 @@ def game_loop(args):
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode = autonomous_to_manual_mode(world.player.get_transform().location, town)
             world.drive_mode_pub(controller.flag_timer, hud.autopilot_enabled)
+            world.steer_cmd_pub(controller.steer_cmd, controller.brake_cmd, controller.thorttle_cmd)
 
 
             if (change_mode and controller.flag_timer == False):
