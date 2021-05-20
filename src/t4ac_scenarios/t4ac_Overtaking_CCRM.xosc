@@ -143,7 +143,7 @@
                 <PrivateAction>
                   <LongitudinalAction>
                     <SpeedAction>
-                      <SpeedActionDynamics dynamicsShape="step" value="80" dynamicsDimension="distance"/>
+                      <SpeedActionDynamics dynamicsShape="step" value="500" dynamicsDimension="distance"/>
                       <SpeedActionTarget>
                         <AbsoluteTargetSpeed value="$GVT1_Speed"/>
                       </SpeedActionTarget>
