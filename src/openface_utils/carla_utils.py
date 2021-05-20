@@ -746,12 +746,12 @@ class KeyboardControl(object):
         # initialize steering wheel
         pygame.joystick.init()
 
-        joystick_count = pygame.joystick.get_count()
-        if joystick_count > 1:
+        self.joystick_count = pygame.joystick.get_count()
+        if  self.joystick_count > 1:
             raise ValueError("Please Connect Just One Joystick")
-        elif joystick_count == 0:
-            raise ValueError("Please Connect One Joystick")
-        elif joystick_count == 1:
+        # elif  self.joystick_count == 0:
+        #     raise ValueError("Please Connect One Joystick")
+        elif  self.joystick_count == 1:
             self._joystick = pygame.joystick.Joystick(0)
             self._joystick.init()
 
@@ -768,6 +768,11 @@ class KeyboardControl(object):
         path = 'openface_utils/beep-01a.wav'
         self._change_mode_beep = pygame.mixer.Sound(path)
 
+        world.player.enable_constant_velocity(carla.Vector3D(6, 0, 0)) #Inital velocity contant
+        world.constant_velocity_enabled = True
+        self.steer_cmd = 0
+        self.brake_cmd = 0
+        self.thorttle_cmd = 0
 
     def begin_timer(self, world):
         self.timer_mode.start()
@@ -783,7 +788,8 @@ class KeyboardControl(object):
 
         self._autopilot_enabled = not self._autopilot_enabled
         world.player.set_autopilot(self._autopilot_enabled)
-
+        world.player.disable_constant_velocity()
+        world.constant_velocity_enabled = False
         # world.player.apply_control(carla.VehicleControl(throttle = 0.0))
         # self._control.throttle = 0.0
         # world.player.get_control().throttle = 0.0 
@@ -926,9 +932,11 @@ class KeyboardControl(object):
                         current_lights ^= carla.VehicleLightState.RightBlinker
 
         if not self._autopilot_enabled:
+            parse_control = True
             if isinstance(self._control, carla.VehicleControl):
                 self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
-                self._parse_vehicle_wheel()
+                if  self.joystick_count > 0:
+                    self._parse_vehicle_wheel(parse_control)
                 self._control.reverse = self._control.gear < 0
                 # Set automatic control-related vehicle lights
                 if self._control.brake:
@@ -945,6 +953,11 @@ class KeyboardControl(object):
             elif isinstance(self._control, carla.WalkerControl):
                 self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time(), world)
             world.player.apply_control(self._control)
+        else: #Save steer values
+            parse_control = False
+            if  self.joystick_count > 0:
+                    self._parse_vehicle_wheel(parse_control)
+
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
@@ -974,7 +987,7 @@ class KeyboardControl(object):
         self._control.steer = round(self._steer_cache, 1)
         self._control.hand_brake = keys[K_SPACE]
 
-    def _parse_vehicle_wheel(self):
+    def _parse_vehicle_wheel(self, parse_control):
         numAxes = self._joystick.get_numaxes()
         jsInputs = [float(self._joystick.get_axis(i)) for i in range(numAxes)]
         # print (jsInputs)
@@ -983,7 +996,7 @@ class KeyboardControl(object):
 
         # Custom function to map range of inputs [1, -1] to outputs [0, 1] i.e 1 from inputs means nothing is pressed
         # For the steering, it seems fine as it is
-        K1 = 1.0  # 0.55
+        K1 = 0.53  # 0.55
         steerCmd = K1 * math.tan(1.1 * jsInputs[self._steer_idx])
 
         K2 = 1.6  # 1.6
@@ -1001,13 +1014,20 @@ class KeyboardControl(object):
         elif brakeCmd > 1:
             brakeCmd = 1
 
-        self._control.steer = steerCmd
-        self._control.brake = brakeCmd
-        self._control.throttle = throttleCmd
+        # print(steerCmd, brakeCmd, throttleCmd)
+        if (parse_control == True):
+            self._control.steer = steerCmd
+            self._control.brake = brakeCmd
+            self._control.throttle = throttleCmd
 
-        #toggle = jsButtons[self._reverse_idx]
+            #toggle = jsButtons[self._reverse_idx]
 
-        self._control.hand_brake = bool(jsButtons[self._handbrake_idx])
+            self._control.hand_brake = bool(jsButtons[self._handbrake_idx])
+        self.steer_cmd = steerCmd
+        self.brake_cmd = brakeCmd
+        self.thorttle_cmd = throttleCmd
+
+
 
 
     def _parse_walker_keys(self, keys, milliseconds, world):
