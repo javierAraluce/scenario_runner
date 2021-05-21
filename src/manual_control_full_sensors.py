@@ -73,6 +73,7 @@ from carla_utils_msgs.msg import DriveMode
 from carla_msgs.msg import CarlaEgoVehicleControl
 from std_msgs.msg import Float64
 from geometry_msgs.msg import PointStamped
+from std_msgs.msg import Bool
 
 from openface_utils import geometric_functions
 import numpy as np
@@ -102,6 +103,7 @@ class WorldSR(World):
         self.pub_ttc = rospy.Publisher('carla/hero/ttc', Float64, queue_size = 10)
         self.pub_line_error = rospy.Publisher('carla/hero/line_error', Float64, queue_size = 10)
         self.pub_steer_cmd = rospy.Publisher('carla/hero/steer_cmd', CarlaEgoVehicleControl, queue_size = 10)
+        self.pub_end_experiment = rospy.Publisher('t4ac/transition_experiment/end_experiment', Bool, queue_size = 10)
 
         rospy.Subscriber("/t4ac/v2u/gaze_focalization/gaze_focalization", PointStamped, self.callback_gaze)
 
@@ -182,12 +184,13 @@ class WorldSR(World):
         self.hud.tick(self, clock)
         return True
 
-    def destroySensors(self):
+    def destroySensors(self):  
             self.camera_manager_rgb.sensor.destroy()
             self.camera_manager_rgb.sensor = None
             self.camera_manager_rgb._index = None
 
     def destroy(self):
+        self.end_experiment_pub(True)
         actors = [
             self.collision_sensor.sensor,
             self.lane_invasion_sensor.sensor,
@@ -217,7 +220,6 @@ class WorldSR(World):
         msg = error
         self.pub_line_error.publish(msg)    
 
-
     def callback_gaze(self, msg):
         self.gaze =  msg
 
@@ -227,7 +229,12 @@ class WorldSR(World):
         msg.brake = brake_cmd
         msg.throttle = thorttle_cmd
 
-        self.pub_steer_cmd.publish(msg)   
+        self.pub_steer_cmd.publish(msg)
+
+    def end_experiment_pub(self, flag):
+        msg = Bool()
+        msg.data = flag
+        self.pub_end_experiment.publish(msg)
 
 
 # ==============================================================================
@@ -397,6 +404,7 @@ def game_loop(args):
             change_mode = autonomous_to_manual_mode(world.player.get_transform().location, town)
             world.drive_mode_pub(controller.flag_timer, hud.autopilot_enabled)
             world.steer_cmd_pub(controller.steer_cmd, controller.brake_cmd, controller.thorttle_cmd)
+            world.end_experiment_pub(False)
 
 
             if (change_mode and controller.flag_timer == False):
@@ -421,14 +429,14 @@ def game_loop(args):
             pygame.display.flip()
 
     finally:
-
         if (world and world.recording_enabled):
             client.stop_recorder()
 
         if world is not None:
             world.destroy()
-
+ 
         pygame.quit()
+        
 
 
 # ==============================================================================
