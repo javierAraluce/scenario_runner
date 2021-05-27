@@ -161,9 +161,6 @@ class WorldSR(World):
         actor_type = get_actor_display_name(self.player)
         self.hud.notification(actor_type)
 
-
-
-
     def render(self, display, camera_rendered):
         if camera_rendered == 1   and self.rgb_flag: self.camera_manager_rgb.render(display)
         elif camera_rendered == 2 and self.semantic_flag: self.camera_manager_semantic.render(display)
@@ -175,7 +172,6 @@ class WorldSR(World):
 
         self.previous_rendered = camera_rendered #detects if rendered sensor has changed
         self.hud.render(display)
-
 
     def tick(self, clock):
         if len(self.world.get_actors().filter(self.player_name)) < 1:
@@ -228,6 +224,7 @@ class WorldSR(World):
         msg.steer = steer_cmd
         msg.brake = brake_cmd
         msg.throttle = thorttle_cmd
+        print(msg)
 
         self.pub_steer_cmd.publish(msg)
 
@@ -241,40 +238,57 @@ class WorldSR(World):
 # -- change_mode() ---------------------------------------------------------------
 # ==============================================================================
 
-def autonomous_to_manual_mode(localization, map):
-    # print('X: ', round(localization.x), 'Y: ', round(localization.y))
-    if map.name == 'Town01':
-        if ((round(localization.x) == 305) and (193 < round(localization.y) < 197)):
-            change = True
-        elif ((round(localization.x) == 142) and (193 < round(localization.y) < 197)):
-            change = True
-        elif ((round(localization.x) == 42) and (325 < round(localization.y) < 328)):
-            change = True
-        else:
-            change = False
-    elif map.name == 'Town04':
-        if ((-305 < round(localization.x) < (-301)) and (433 < round(localization.y) < 438)):
-            change = True
-        elif ((411 < round(localization.x) < 414) and (-163 < round(localization.y) < -160)):
-            change = True
-        elif ((115 < round(localization.x) < 119) and ((-394) < round(localization.y) < (-388))):
-            change = True
-        else:
-            change = False
-    elif map.name == 'Town03':
-        if ((98 < round(localization.x) < 100) and (3 < round(localization.y) < 10)):
-            change = True
-        else:
-            change = False
-    else:
-        # print('mal')
-        change = False
+# def autonomous_to_manual_mode(localization, map):
+#     # print('X: ', round(localization.x), 'Y: ', round(localization.y))
+#     if map.name == 'Town01':
+#         if ((round(localization.x) == 305) and (193 < round(localization.y) < 197)):
+#             change = True
+#         elif ((round(localization.x) == 142) and (193 < round(localization.y) < 197)):
+#             change = True
+#         elif ((round(localization.x) == 42) and (325 < round(localization.y) < 328)):
+#             change = True
+#         else:
+#             change = False
+#     elif map.name == 'Town04':
+#         if ((-305 < round(localization.x) < (-301)) and (433 < round(localization.y) < 438)):
+#             change = True
+#         elif ((411 < round(localization.x) < 414) and (-163 < round(localization.y) < -160)):
+#             change = True
+#         elif ((115 < round(localization.x) < 119) and ((-394) < round(localization.y) < (-388))):
+#             change = True
+#         else:
+#             change = False
+#     elif map.name == 'Town03':
+#         if ((98 < round(localization.x) < 100) and (3 < round(localization.y) < 10)):
+#             change = True
+#         else:
+#             change = False
+#     else:
+#         # print('mal')
+#         change = False
 
           
-    return change
-    
-        # newevent = pygame.event.Event(pygame.locals.KEYDOWN, unicode="p", key=pygame.locals.K_p, mod=pygame.locals.KMOD_NONE) #create the event
-        # pygame.event.post(newevent) #add the event to the queue
+#     return change
+
+
+
+def autonomous_to_manual_mode(world, localization, map, transition_time, flag_change):
+    """
+    Function that change the driving mode when the car is at 20 metres above the other
+    """
+    vehicles = world.world.get_actors().filter('vehicle.*')
+    for vehicle in vehicles:
+        if (vehicle.id == 87) :
+            object_location = vehicle.get_location()            
+            euclidean_distance = math.sqrt(pow((localization.x - object_location.x), 2) + pow((localization.y - object_location.y), 2))
+            if (euclidean_distance < 20) and (flag_change == False):
+                change = True
+                flag_change = True
+            else:
+                change = False
+          
+    return change, flag_change   
+
 
 def vehicle_to_bbox(linear_velocity, angular_velocity, transform, angle, dt):
     """
@@ -342,9 +356,9 @@ def time_to_collision(world):
         world.ttc_pub(min_ttc)
         return min_ttc
     else:
+        world.ttc_pub(1000)
         return 1000    
     
-
 def line_displacement(world, current_position, initial_position):
     x_0 = initial_position.x
     y_0 = initial_position.y
@@ -387,6 +401,7 @@ def game_loop(args):
 
         waypoint = town.get_waypoint(world.player.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Sidewalk))
         initial_position = waypoint.transform.location
+        flag_change = False
 
         clock = pygame.time.Clock()
         while not rospy.core.is_shutdown():
@@ -395,13 +410,15 @@ def game_loop(args):
             world.pub_velocity.publish(int(velocity))
 
             
-            ttc = time_to_collision(world)
+            ttc = time_to_collision(world) # Time to collision
 
             current_position = world.player.get_transform().location
             line_error = line_displacement(world, current_position, initial_position)
 
             hud.autopilot_enabled = controller._autopilot_enabled
-            change_mode = autonomous_to_manual_mode(world.player.get_transform().location, town)
+            change_mode, flag_change = autonomous_to_manual_mode(world, current_position, town, args.transition_timer, flag_change)
+
+            # Pub topics on ros for evaluation
             world.drive_mode_pub(controller.flag_timer, hud.autopilot_enabled)
             world.steer_cmd_pub(controller.steer_cmd, controller.brake_cmd, controller.thorttle_cmd)
             world.end_experiment_pub(False)
@@ -418,8 +435,6 @@ def game_loop(args):
             if not world.tick(clock):
                 return
             # world.render(display)
-
-
             
             world.render(display, controller.camera_rendered) 
 
