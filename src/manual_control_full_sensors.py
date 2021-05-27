@@ -224,7 +224,6 @@ class WorldSR(World):
         msg.steer = steer_cmd
         msg.brake = brake_cmd
         msg.throttle = thorttle_cmd
-        print(msg)
 
         self.pub_steer_cmd.publish(msg)
 
