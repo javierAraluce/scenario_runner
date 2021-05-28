@@ -398,8 +398,6 @@ def game_loop(args):
 
         town = world.map
 
-        waypoint = town.get_waypoint(world.player.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Sidewalk))
-        initial_position = waypoint.transform.location
         flag_change = False
 
         clock = pygame.time.Clock()
@@ -412,7 +410,10 @@ def game_loop(args):
             ttc = time_to_collision(world) # Time to collision
 
             current_position = world.player.get_transform().location
+            waypoint = town.get_waypoint(world.player.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Sidewalk))
+            initial_position = waypoint.transform.location
             line_error = line_displacement(world, current_position, initial_position)
+            print(line_error)
 
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode, flag_change = autonomous_to_manual_mode(world, current_position, town, args.transition_timer, flag_change)
