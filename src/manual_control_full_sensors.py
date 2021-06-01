@@ -349,7 +349,7 @@ def time_to_collision(world):
                     ttc.append(dt)
                     vehicle_id.append(vehicle.id)
                     break
-
+                    
     if (len(ttc) > 0):
         min_ttc = min(ttc)
         world.ttc_pub(min_ttc)
@@ -366,7 +366,7 @@ def line_displacement(world, current_position, initial_position):
     y_t = current_position.y
 
     x_error = abs(x_t - x_0)
-    y_error = abs(y_t - y_0)
+    y_error = y_t - y_0
     world.line_error_pub(y_error)
 
     # print(x_error, y_error)
@@ -408,12 +408,12 @@ def game_loop(args):
 
             
             ttc = time_to_collision(world) # Time to collision
+            print(ttc)
 
             current_position = world.player.get_transform().location
             waypoint = town.get_waypoint(world.player.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Sidewalk))
             initial_position = waypoint.transform.location
             line_error = line_displacement(world, current_position, initial_position)
-            print(line_error)
 
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode, flag_change = autonomous_to_manual_mode(world, current_position, town, args.transition_timer, flag_change)
