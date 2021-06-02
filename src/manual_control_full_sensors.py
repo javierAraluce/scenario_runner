@@ -408,7 +408,7 @@ def game_loop(args):
 
             
             ttc = time_to_collision(world) # Time to collision
-            print(ttc)
+            # print(ttc)
 
             current_position = world.player.get_transform().location
             waypoint = town.get_waypoint(world.player.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Sidewalk))
