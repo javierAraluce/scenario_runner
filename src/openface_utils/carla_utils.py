@@ -767,9 +767,9 @@ class KeyboardControl(object):
         pygame.mixer.init()
         path = 'openface_utils/beep-01a.wav'
         self._change_mode_beep = pygame.mixer.Sound(path)
-
-        world.player.enable_constant_velocity(carla.Vector3D(7, 0, 0)) #Inital velocity contant
-        world.constant_velocity_enabled = True
+        if (start_in_autopilot):
+            world.player.enable_constant_velocity(carla.Vector3D(7, 0, 0)) #Inital velocity contant
+            world.constant_velocity_enabled = True
         self.steer_cmd = 0
         self.brake_cmd = 0
         self.thorttle_cmd = 0
