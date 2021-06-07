@@ -276,11 +276,12 @@ def autonomous_to_manual_mode(world, localization, map, transition_time, flag_ch
     Function that change the driving mode when the car is at 20 metres above the other
     """
     vehicles = world.world.get_actors().filter('vehicle.*')
+    distance_to_vehicle = 20
     for vehicle in vehicles:
         if (vehicle.id == 87) :
             object_location = vehicle.get_location()            
             euclidean_distance = math.sqrt(pow((localization.x - object_location.x), 2) + pow((localization.y - object_location.y), 2))
-            if (euclidean_distance < 20) and (flag_change == False):
+            if (euclidean_distance < distance_to_vehicle) and (flag_change == False):
                 change = True
                 flag_change = True
             else:
@@ -365,7 +366,7 @@ def line_displacement(world, current_position, initial_position):
     x_t = current_position.x
     y_t = current_position.y
 
-    x_error = abs(x_t - x_0)
+    x_error = x_t - x_0
     y_error = y_t - y_0
     world.line_error_pub(y_error)
 
@@ -387,6 +388,9 @@ def game_loop(args):
     try:
         client = carla.Client(args.host, args.port)
         client.set_timeout(2.0)
+        traffic_manager = client.get_trafficmanager(int(8000))
+        traffic_manager.global_percentage_speed_difference(-50)
+
 
         display = pygame.display.set_mode(
             (args.width, args.height),
@@ -411,7 +415,7 @@ def game_loop(args):
             # print(ttc)
 
             current_position = world.player.get_transform().location
-            waypoint = town.get_waypoint(world.player.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Sidewalk))
+            waypoint = town.get_waypoint(world.player.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving))
             initial_position = waypoint.transform.location
             line_error = line_displacement(world, current_position, initial_position)
 
