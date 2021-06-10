@@ -191,6 +191,10 @@ class World(object):
         self.recording_enabled = False
         self.recording_start = 0
 
+        settings =  self.world.get_settings()
+        settings.synchronous_mode = True # Enables synchronous mode
+        self.world.apply_settings(settings)
+
     def restart(self):
         # Keep same camera config if the camera manager exists.
         cam_index = self.camera_manager_rgb.index if self.camera_manager_rgb is not None else 0
@@ -742,6 +746,8 @@ class KeyboardControl(object):
         self.timer_mode = RepeatTimer(self.transition_timer, lambda:self.change_autonomous_mode(world))
         self.flag_timer = False
 
+        
+
 
         # initialize steering wheel
         pygame.joystick.init()
@@ -778,7 +784,6 @@ class KeyboardControl(object):
         self.timer_mode.start()
         self._change_mode_beep.play()
         world.hud.warning_change_drive_mode(self._autopilot_enabled)
-
 
     def change_autonomous_mode(self, world):
 
@@ -934,9 +939,10 @@ class KeyboardControl(object):
         if not self._autopilot_enabled:
             parse_control = True
             if isinstance(self._control, carla.VehicleControl):
-                self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
                 if  self.joystick_count > 0:
                     self._parse_vehicle_wheel(parse_control)
+                else:
+                    self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
                 self._control.reverse = self._control.gear < 0
                 # Set automatic control-related vehicle lights
                 if self._control.brake:
@@ -957,7 +963,6 @@ class KeyboardControl(object):
             parse_control = False
             if  self.joystick_count > 0:
                     self._parse_vehicle_wheel(parse_control)
-
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
@@ -1014,7 +1019,7 @@ class KeyboardControl(object):
         elif brakeCmd > 1:
             brakeCmd = 1
 
-        # print(steerCmd, brakeCmd, throttleCmd)
+        # print(self._control.throttle, " ",  throttleCmd)
         if (parse_control == True):
             self._control.steer = steerCmd
             self._control.brake = brakeCmd
@@ -1026,9 +1031,6 @@ class KeyboardControl(object):
         self.steer_cmd = steerCmd
         self.brake_cmd = brakeCmd
         self.thorttle_cmd = throttleCmd
-
-
-
 
     def _parse_walker_keys(self, keys, milliseconds, world):
         self._control.speed = 0.0
