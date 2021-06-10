@@ -69,7 +69,7 @@ import math
 
 
 import rospy
-from carla_utils_msgs.msg import DriveMode 
+from carla_utils_msgs.msg import DriveMode, Float64Stamped
 from carla_msgs.msg import CarlaEgoVehicleControl
 from std_msgs.msg import Float64
 from geometry_msgs.msg import PointStamped
@@ -100,8 +100,8 @@ class WorldSR(World):
 
         self.pub = rospy.Publisher('carla/hero/drive_mode', DriveMode, queue_size = 10)
         self.pub_velocity = rospy.Publisher('carla/hero/velocity', Float64, queue_size = 10)
-        self.pub_ttc = rospy.Publisher('carla/hero/ttc', Float64, queue_size = 10)
-        self.pub_line_error = rospy.Publisher('carla/hero/line_error', Float64, queue_size = 10)
+        self.pub_ttc = rospy.Publisher('carla/hero/ttc', Float64Stamped, queue_size = 10)
+        self.pub_line_error = rospy.Publisher('carla/hero/line_error', Float64Stamped, queue_size = 10)
         self.pub_steer_cmd = rospy.Publisher('carla/hero/steer_cmd', CarlaEgoVehicleControl, queue_size = 10)
         self.pub_end_experiment = rospy.Publisher('t4ac/transition_experiment/end_experiment', Bool, queue_size = 10)
 
@@ -207,13 +207,15 @@ class WorldSR(World):
         self.pub.publish(msg)
 
     def ttc_pub(self, ttc):
-        msg = Float64()
-        msg = ttc
+        msg = Float64Stamped()
+        msg.header.stamp = rospy.Time.now() 
+        msg.data = ttc
         self.pub_ttc.publish(msg)
 
     def line_error_pub (self, error):
-        msg = Float64()
-        msg = error
+        msg = Float64Stamped()
+        msg.header.stamp = rospy.Time.now() 
+        msg.data = error
         self.pub_line_error.publish(msg)    
 
     def callback_gaze(self, msg):
@@ -221,6 +223,7 @@ class WorldSR(World):
 
     def steer_cmd_pub(self, steer_cmd, brake_cmd, thorttle_cmd):
         msg = CarlaEgoVehicleControl()
+        msg.header.stamp = rospy.Time.now() 
         msg.steer = steer_cmd
         msg.brake = brake_cmd
         msg.throttle = thorttle_cmd
@@ -399,6 +402,7 @@ def game_loop(args):
         hud = HUD(args.width, args.height)
         world = WorldSR(client.get_world(), hud, args)
         controller = KeyboardControl(world, args.autopilot)
+        
 
         town = world.map
 
@@ -408,7 +412,7 @@ def game_loop(args):
         while not rospy.core.is_shutdown():
             v = world.player.get_velocity()
             velocity = 3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)
-            world.pub_velocity.publish(int(velocity))
+            
 
             
             ttc = time_to_collision(world) # Time to collision
@@ -422,10 +426,7 @@ def game_loop(args):
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode, flag_change = autonomous_to_manual_mode(world, current_position, town, args.transition_timer, flag_change)
 
-            # Pub topics on ros for evaluation
-            world.drive_mode_pub(controller.flag_timer, hud.autopilot_enabled)
-            world.steer_cmd_pub(controller.steer_cmd, controller.brake_cmd, controller.thorttle_cmd)
-            world.end_experiment_pub(False)
+            
 
 
             if (change_mode and controller.flag_timer == False):
@@ -433,7 +434,7 @@ def game_loop(args):
 
                 controller.begin_timer(world)
             
-            clock.tick_busy_loop(30)
+            clock.tick_busy_loop(60) # Maximun fps client
             if controller.parse_events(client, world, clock):
                 return
             if not world.tick(clock):
@@ -446,6 +447,12 @@ def game_loop(args):
             pygame.draw.circle(display, RED, [world.gaze.point.x + 1920, world.gaze.point.y], 10)
 
             pygame.display.flip()
+
+            # Pub topics on ros for evaluation
+            world.pub_velocity.publish(int(velocity))
+            world.drive_mode_pub(controller.flag_timer, hud.autopilot_enabled)
+            world.steer_cmd_pub(controller.steer_cmd, controller.brake_cmd, controller.thorttle_cmd)
+            world.end_experiment_pub(False)
 
     finally:
         if (world and world.recording_enabled):
