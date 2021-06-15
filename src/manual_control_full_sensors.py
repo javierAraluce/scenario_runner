@@ -402,7 +402,13 @@ def game_loop(args):
         hud = HUD(args.width, args.height)
         world = WorldSR(client.get_world(), hud, args)
         controller = KeyboardControl(world, args.autopilot)
-        
+        img_focus = pygame.image.load("images/logo_green2.png")
+        img_focus = pygame.transform.scale(img_focus, (150, 150))
+        img_unfocus = pygame.image.load("images/logo_red.png")
+        img_unfocus = pygame.transform.scale(img_unfocus, (150, 150))
+        x = args.width * 1 / 3; # x coordnate of image
+        y = 0; # y coordinate of image
+       
 
         town = world.map
 
@@ -426,8 +432,6 @@ def game_loop(args):
             hud.autopilot_enabled = controller._autopilot_enabled
             change_mode, flag_change = autonomous_to_manual_mode(world, current_position, town, args.transition_timer, flag_change)
 
-            
-
 
             if (change_mode and controller.flag_timer == False):
                 controller.flag_timer = True
@@ -446,6 +450,15 @@ def game_loop(args):
             # Draw gaze on screen 
             pygame.draw.circle(display, RED, [world.gaze.point.x + 1920, world.gaze.point.y], 10)
 
+            if ((world.gaze.point.x > 0) and (world.gaze.point.x < 1920 ) 
+                and (world.gaze.point.y > 0) and (world.gaze.point.y < 1080)):
+                display.blit(img_focus, ( x,y)) # paint to screen
+                controller.attention = True
+                controller.flag_attention = True
+            else:
+                display.blit(img_unfocus, ( x,y)) # paint to screen
+                controller.attention = False
+                    
             pygame.display.flip()
 
             # Pub topics on ros for evaluation

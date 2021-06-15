@@ -746,6 +746,9 @@ class KeyboardControl(object):
         self.timer_mode = RepeatTimer(self.transition_timer, lambda:self.change_autonomous_mode(world))
         self.flag_timer = False
 
+
+        self.attention = True
+        self.flag_attention = True
         
 
 
@@ -780,6 +783,8 @@ class KeyboardControl(object):
         self.brake_cmd = 0
         self.thorttle_cmd = 0
 
+
+
     def begin_timer(self, world):
         self.timer_mode.start()
         self._change_mode_beep.play()
@@ -790,9 +795,23 @@ class KeyboardControl(object):
         self.flag_timer = False
         self._change_mode_beep.stop() 
         
+        print ("self._autopilot_enabled: ", self._autopilot_enabled)
+        print ("self.attention: ", self.attention)
+        print ("self.flag_attention: ", self.flag_attention)
+        if ((self._autopilot_enabled == True) and (self.attention == False) and (self.flag_attention == True)):
+            self._autopilot_enabled = not self._autopilot_enabled
+            world.player.set_autopilot(self._autopilot_enabled)
+            # world.player.apply_control(carla.VehicleControl(brake = 1.0))
+            self._control.brake = 1.0
+            world.player.apply_control(self._control)
+            self.flag_attention = False
+        else:
+            self._autopilot_enabled = not self._autopilot_enabled
+            world.player.set_autopilot(self._autopilot_enabled)
 
-        self._autopilot_enabled = not self._autopilot_enabled
-        world.player.set_autopilot(self._autopilot_enabled)
+
+
+        
         # world.player.disable_constant_velocity()
         # world.constant_velocity_enabled = False
         # world.player.apply_control(carla.VehicleControl(throttle = 0.0))
@@ -958,7 +977,9 @@ class KeyboardControl(object):
                     world.player.set_light_state(carla.VehicleLightState(self._lights))
             elif isinstance(self._control, carla.WalkerControl):
                 self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time(), world)
-            world.player.apply_control(self._control)
+
+            if (self.flag_attention == True):               
+                world.player.apply_control(self._control)
         else: #Save steer values
             parse_control = False
             if  self.joystick_count > 0:
