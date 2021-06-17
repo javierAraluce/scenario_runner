@@ -2,7 +2,7 @@
 <OpenSCENARIO>
   <FileHeader revMajor="1" revMinor="0" date="2021-04-20T12:00:00" description="CARLA: t4ac - Adaptative Cruise Control Car to Car Rear Braking" author="J Felipe Arango"/>
   <ParameterDeclarations>
-    <ParameterDeclaration name="leadingSpeed" parameterType="double" value="6"/>
+    <ParameterDeclaration name="leadingSpeed" parameterType="double" value="7"/>
     <ParameterDeclaration name="vehicle_name" parameterType="string" value="hero" />   <!-- hero  ;  ego_vehicle -->
   </ParameterDeclarations>
   <CatalogLocations/>

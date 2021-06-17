@@ -292,12 +292,30 @@ def autonomous_to_manual_mode(world, localization, map, transition_time, flag_ch
           
     return change, flag_change   
 
+def autonomous_to_manual_mode_by_ttc(world, ttc, vehicle_id, transition_time, flag_change):
+    """
+    Function that change the driving mode in function of ttc
+    """
+
+    # collision_time = transition_time * 2 + (4 - transition_time)
+    k1 = 5/6
+    k2 = -5 
+    k3 = 55/6
+
+    collision_time =  (k1 * transition_time **3) + (k2 * transition_time **2) + (k3 * transition_time)
+    if (ttc  < collision_time) and (flag_change == False) and (vehicle_id == 87):
+        change = True
+        flag_change = True
+    else:
+        change = False
+          
+    return change, flag_change 
 
 def vehicle_to_bbox(linear_velocity, angular_velocity, transform, angle, dt):
     """
     Transform vehicle to a bbox, knowing velocity and position 
     """
-    vehicle_width = 1.7
+    vehicle_width = 1.4
     vehicle_length = 4.4
     abs_vel = math.sqrt(pow(linear_velocity.x,2) + pow(linear_velocity.y,2))
     x_dt = transform.location.x + abs_vel * dt * math.cos(angle) # x centroid
@@ -324,7 +342,7 @@ def time_to_collision(world):
     ego_vehicle_transform = world.player.get_transform()
     vehicles = world.world.get_actors().filter('vehicle.*')
     ttc = []
-    vehicle_id = []
+    vehicles_id = []
 
     for vehicle in vehicles:
         if vehicle.id != world.player.id:
@@ -333,7 +351,7 @@ def time_to_collision(world):
             object_transform = vehicle.get_transform()
 
 
-            for dt_10 in range(0, 30): # 3 seconds window
+            for dt_10 in range(0, 50): # 5 seconds window
                 if dt_10 == 0:
                     angle_ego = ego_vehicle_transform.rotation.yaw
                     angle_object = object_transform.rotation.yaw
@@ -351,16 +369,18 @@ def time_to_collision(world):
 
                 if (area_iou > 0.0):
                     ttc.append(dt)
-                    vehicle_id.append(vehicle.id)
+                    vehicles_id.append(vehicle.id)
                     break
-                    
+        
     if (len(ttc) > 0):
         min_ttc = min(ttc)
+        I = ttc.index(min(ttc))
+        vehicle_id = vehicles_id[I]
         world.ttc_pub(min_ttc)
-        return min_ttc
+        return min_ttc, vehicle_id
     else:
         world.ttc_pub(1000)
-        return 1000    
+        return 1000, None 
     
 def line_displacement(world, current_position, initial_position):
     x_0 = initial_position.x
@@ -373,7 +393,6 @@ def line_displacement(world, current_position, initial_position):
     y_error = y_t - y_0
     world.line_error_pub(y_error)
 
-    # print(x_error, y_error)
     return y_error
 
 
@@ -391,9 +410,6 @@ def game_loop(args):
     try:
         client = carla.Client(args.host, args.port)
         client.set_timeout(2.0)
-        traffic_manager = client.get_trafficmanager(int(8000))
-        traffic_manager.global_percentage_speed_difference(-50)
-
 
         display = pygame.display.set_mode(
             (args.width, args.height),
@@ -402,6 +418,18 @@ def game_loop(args):
         hud = HUD(args.width, args.height)
         world = WorldSR(client.get_world(), hud, args)
         controller = KeyboardControl(world, args.autopilot)
+
+        traffic_manager = client.get_trafficmanager(int(8000))
+        traffic_manager.global_percentage_speed_difference(-35) # Velocity car
+
+        ego_vehicle = world.player
+        vehicles = world.world.get_actors().filter('vehicle.*')
+        for vehicle in vehicles:
+            if vehicle.id == 87:
+                vehicle_acc = vehicle
+
+        traffic_manager.collision_detection(ego_vehicle, vehicle_acc, False)
+
         img_focus = pygame.image.load("images/logo_green2.png")
         img_focus = pygame.transform.scale(img_focus, (150, 150))
         img_unfocus = pygame.image.load("images/logo_red.png")
@@ -418,11 +446,8 @@ def game_loop(args):
         while not rospy.core.is_shutdown():
             v = world.player.get_velocity()
             velocity = 3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2)
-            
 
-            
-            ttc = time_to_collision(world) # Time to collision
-            # print(ttc)
+            ttc, vehicle_id = time_to_collision(world) # Time to collision
 
             current_position = world.player.get_transform().location
             waypoint = town.get_waypoint(world.player.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving))
@@ -430,15 +455,15 @@ def game_loop(args):
             line_error = line_displacement(world, current_position, initial_position)
 
             hud.autopilot_enabled = controller._autopilot_enabled
-            change_mode, flag_change = autonomous_to_manual_mode(world, current_position, town, args.transition_timer, flag_change)
+            # change_mode, flag_change = autonomous_to_manual_mode(world, current_position, town, args.transition_timer, flag_change)
+            change_mode, flag_change = autonomous_to_manual_mode_by_ttc(world, ttc, vehicle_id, args.transition_timer, flag_change)
 
 
             if (change_mode and controller.flag_timer == False):
                 controller.flag_timer = True
-
                 controller.begin_timer(world)
             
-            clock.tick_busy_loop(60) # Maximun fps client
+            clock.tick_busy_loop(13) # Maximun fps client
             if controller.parse_events(client, world, clock):
                 return
             if not world.tick(clock):
@@ -522,7 +547,7 @@ def main():
         '--res',
         metavar='WIDTHxHEIGHT',
         default='1280x720',
-        help='window resolution (default: 1280x720)5760x1080') 
+        help='window resolution (default: 1280x720) 5760x1080') 
     args = argparser.parse_args()
 
     args.rolename = 'hero'      # Needed for CARLA version
