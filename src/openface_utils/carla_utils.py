@@ -750,8 +750,6 @@ class KeyboardControl(object):
         self.attention = True
         self.flag_attention = True
         
-
-
         # initialize steering wheel
         pygame.joystick.init()
 
@@ -1228,7 +1226,7 @@ class HUD(object):
 
     def warning_change_drive_mode(self, autopilot):
         if (self.autopilot_enabled):
-            text = 'Manual driving mode will be set in' + str(self.transition_timer) + 'seconds'
+            text = 'Manual driving mode will be set in ' + str(self.transition_timer) + ' seconds'
         else:
             text = 'Autonomous driving mode will be set in ' + str(self.transition_timer) + ' seconds'
 
