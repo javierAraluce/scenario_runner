@@ -749,6 +749,7 @@ class KeyboardControl(object):
 
         self.attention = True
         self.flag_attention = True
+        self.emergency_break = False
         
         # initialize steering wheel
         pygame.joystick.init()
@@ -793,28 +794,19 @@ class KeyboardControl(object):
         self.flag_timer = False
         self._change_mode_beep.stop() 
         
-        print ("self._autopilot_enabled: ", self._autopilot_enabled)
-        print ("self.attention: ", self.attention)
-        print ("self.flag_attention: ", self.flag_attention)
         if ((self._autopilot_enabled == True) and (self.attention == False) and (self.flag_attention == True)):
             self._autopilot_enabled = not self._autopilot_enabled
             world.player.set_autopilot(self._autopilot_enabled)
-            # world.player.apply_control(carla.VehicleControl(brake = 1.0))
             self._control.brake = 1.0
             world.player.apply_control(self._control)
             self.flag_attention = False
+            self.emergency_break = True
         else:
             self._autopilot_enabled = not self._autopilot_enabled
             world.player.set_autopilot(self._autopilot_enabled)
 
 
 
-        
-        # world.player.disable_constant_velocity()
-        # world.constant_velocity_enabled = False
-        # world.player.apply_control(carla.VehicleControl(throttle = 0.0))
-        # self._control.throttle = 0.0
-        # world.player.get_control().throttle = 0.0 
 
         self.timer_mode.cancel()
         self.timer_mode = RepeatTimer(self.transition_timer, lambda:self.change_autonomous_mode(world))
@@ -978,10 +970,15 @@ class KeyboardControl(object):
 
             if (self.flag_attention == True):               
                 world.player.apply_control(self._control)
+            else:
+                world.hud.emergency_break() 
+                self._control.brake = 1.0
+                world.player.apply_control(self._control)
         else: #Save steer values
             parse_control = False
             if  self.joystick_count > 0:
                     self._parse_vehicle_wheel(parse_control)
+
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
@@ -1081,6 +1078,7 @@ class HUD(object):
     def __init__(self, width, height):
         self.dim = (width, height)
         font = pygame.font.Font(pygame.font.get_default_font(), 20)
+        font2 = pygame.font.Font(pygame.font.get_default_font(), 30)
         font_name = 'courier' if os.name == 'nt' else 'mono'
         fonts = [x for x in pygame.font.get_fonts() if font_name in x]
         default_font = 'ubuntumono'
@@ -1089,7 +1087,8 @@ class HUD(object):
         self._font_mono = pygame.font.Font(mono, 12 if os.name == 'nt' else 14)
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
         self._notifications_permanent = FadingText(font, (200, 40), ((width * 2/3) - 200 , 0))
-        self._notifications_warning = FadingText(font, (550, 40), (width - (width / 2) - 275 , 100))
+        self._notifications_warning = FadingText(font, (500, 40), (width - (width / 2) - 275 , 100))
+        self._notifications_emergency= FadingText(font2, (340, 50), (width - (width / 2) - 150 , 100))
         self.help = HelpText(pygame.font.Font(mono, 16), width, height)
         self.server_fps = 0
         self.frame = 0
@@ -1098,7 +1097,6 @@ class HUD(object):
         self._info_text = []
         self._server_clock = pygame.time.Clock()
 
-        self.autopilot_enabled = False
 
     def on_world_tick(self, timestamp):
         self._server_clock.tick()
@@ -1109,6 +1107,7 @@ class HUD(object):
     def tick(self, world, clock):
         self._notifications.tick(world, clock)
         self._notifications_permanent.tick(world, clock)
+        self._notifications_emergency.tick(world, clock)
         self._notifications_warning.tick(world, clock)
         self.transition_timer = world.transition_timer
 
@@ -1174,7 +1173,6 @@ class HUD(object):
                 self._info_text.append('% 4dm %s' % (d, vehicle_type))
                  
               
-
     def toggle_info(self):
         self._show_info = not self._show_info
 
@@ -1222,10 +1220,11 @@ class HUD(object):
         self._notifications.render(display)
         self._notifications_permanent.render(display)
         self._notifications_warning.render(display)
+        self._notifications_emergency.render(display)
         self.help.render(display)
 
     def warning_change_drive_mode(self, autopilot):
-        if (self.autopilot_enabled):
+        if (autopilot):
             text = 'Manual driving mode will be set in ' + str(self.transition_timer) + ' seconds'
         else:
             text = 'Autonomous driving mode will be set in ' + str(self.transition_timer) + ' seconds'
@@ -1238,8 +1237,12 @@ class HUD(object):
         else:
             text = 'Manual mode'
         # print(text)
-        self._notifications_permanent.set_text(text, seconds=1)
+        self._notifications_permanent.set_text(text, seconds = 1)
     
+    def emergency_break(self):
+        text = 'EMERGENCY BREAK'
+        color=(255, 0, 0)
+        self._notifications_emergency.set_text(text, color = color, seconds = 1)
 # ==============================================================================
 # -- FadingText ----------------------------------------------------------------
 # ==============================================================================

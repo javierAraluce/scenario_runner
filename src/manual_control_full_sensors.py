@@ -193,16 +193,23 @@ class WorldSR(World):
             self.gnss_sensor.sensor,
             self.player]
 
-    def drive_mode_pub(self, change_mode, autopilot):
+    def drive_mode_pub(self, change_mode, autopilot, emergency_break):
         msg = DriveMode()
         msg.header.stamp = rospy.Time.now() 
         msg.transition = change_mode
         if autopilot:
             msg.autonomous = True
             msg.manual = False
+            msg.emergency_break = emergency_break
         else:
             msg.autonomous = False
             msg.manual = True
+            msg.emergency_break = emergency_break
+
+        if emergency_break:
+            msg.emergency_break = emergency_break
+            msg.autonomous = False
+            msg.manual = False    
 
         self.pub.publish(msg)
 
@@ -434,13 +441,16 @@ def game_loop(args):
         img_focus = pygame.transform.scale(img_focus, (150, 150))
         img_unfocus = pygame.image.load("images/logo_red.png")
         img_unfocus = pygame.transform.scale(img_unfocus, (150, 150))
-        x = args.width * 1 / 3; # x coordnate of image
-        y = 0; # y coordinate of image
-       
+        x = args.width * 1 / 3 # x coordnate of image
+        y = 0 # y coordinate of image
+
+        x_velocity = args.width * 2 / 3 - 150
+        y_velocity = args.height - 150
 
         town = world.map
 
         flag_change = False
+        myFont = pygame.font.SysFont("Times New Roman", 100, bold=True)
 
         clock = pygame.time.Clock()
         while not rospy.core.is_shutdown():
@@ -477,18 +487,22 @@ def game_loop(args):
 
             if ((world.gaze.point.x > 0) and (world.gaze.point.x < 1920 ) 
                 and (world.gaze.point.y > 0) and (world.gaze.point.y < 1080)):
-                display.blit(img_focus, ( x,y)) # paint to screen
+                display.blit(img_focus, (x,y)) # paint to screen
                 controller.attention = True
                 controller.flag_attention = True
+                controller.emergency_break = False
             else:
-                display.blit(img_unfocus, ( x,y)) # paint to screen
+                display.blit(img_unfocus, (x,y)) # paint to screen
                 controller.attention = False
-                    
+
+            VelocityDisplay = myFont.render(str(int(velocity)), 1, (0,0,0))
+
+            display.blit(VelocityDisplay, (x_velocity, y_velocity))        
             pygame.display.flip()
 
             # Pub topics on ros for evaluation
             world.pub_velocity.publish(int(velocity))
-            world.drive_mode_pub(controller.flag_timer, hud.autopilot_enabled)
+            world.drive_mode_pub(controller.flag_timer, hud.autopilot_enabled, controller.emergency_break)
             world.steer_cmd_pub(controller.steer_cmd, controller.brake_cmd, controller.thorttle_cmd)
             world.end_experiment_pub(False)
 
