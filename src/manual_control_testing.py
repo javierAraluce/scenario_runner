@@ -426,16 +426,16 @@ def game_loop(args):
         world = WorldSR(client.get_world(), hud, args)
         controller = KeyboardControl(world, args.autopilot)
 
-        traffic_manager = client.get_trafficmanager(int(8000))
-        traffic_manager.global_percentage_speed_difference(-35) # Velocity car
+        # traffic_manager = client.get_trafficmanager(int(8000))
+        # traffic_manager.global_percentage_speed_difference(-35) # Velocity car
 
-        ego_vehicle = world.player
-        vehicles = world.world.get_actors().filter('vehicle.*')
-        for vehicle in vehicles:
-            if vehicle.id == 87:
-                vehicle_acc = vehicle
+        # ego_vehicle = world.player
+        # vehicles = world.world.get_actors().filter('vehicle.*')
+        # for vehicle in vehicles:
+        #     if vehicle.id == 87:
+        #         vehicle_acc = vehicle
 
-        traffic_manager.collision_detection(ego_vehicle, vehicle_acc, False)
+        # traffic_manager.collision_detection(ego_vehicle, vehicle_acc, False)
 
         img_focus = pygame.image.load("images/logo_green2.png")
         img_focus = pygame.transform.scale(img_focus, (150, 150))
@@ -466,12 +466,12 @@ def game_loop(args):
 
             hud.autopilot_enabled = controller._autopilot_enabled
             # change_mode, flag_change = autonomous_to_manual_mode(world, current_position, town, args.transition_timer, flag_change)
-            change_mode, flag_change = autonomous_to_manual_mode_by_ttc(world, ttc, vehicle_id, args.transition_timer, flag_change)
+            # change_mode, flag_change = autonomous_to_manual_mode_by_ttc(world, ttc, vehicle_id, args.transition_timer, flag_change)
 
 
-            if (change_mode and controller.flag_timer == False):
-                controller.flag_timer = True
-                controller.begin_timer(world)
+            # if (change_mode and controller.flag_timer == False):
+            #     controller.flag_timer = True
+            #     controller.begin_timer(world)
             
             clock.tick_busy_loop(20) # Maximun fps client
             if controller.parse_events(client, world, clock):
