@@ -3,8 +3,9 @@ echo 'Clean'
 
 
 echo 'Mundo'
-cd /opt/carla-simulator/ && ./CarlaUE4.sh -ResX=300 -ResY=300 &
-sleep 10
+# cd /opt/carla-simulator/ && ./CarlaUE4.sh -ResX=300 -ResY=300 &
+# cd ~/Tesis/carla/ && ./CarlaUE4.sh -ResX=300 -ResY=300 &
+# sleep 10
 echo 'Bridge'
 
 STATUS=$(/usr/bin/pgrep roslaunch | wc -l)
